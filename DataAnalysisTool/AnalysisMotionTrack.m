@@ -1,14 +1,14 @@
-%% åˆ†æè¿åŠ¨è½¨è¿¹ï¼Œå¹¶æ ¹æ®é€‰é¡¹ç”»å›¾
+%% ·ÖÎöÔË¶¯¹ì¼££¬²¢¸ù¾İÑ¡Ïî»­Í¼
 function AnalysisMotionTrack(motionTracks, motionFlags)
     if isempty(motionTracks)
-        fprintf('æ²¡æœ‰éœ€è¦åˆ†æçš„è¿åŠ¨è½¨è¿¹ï¼\n');
+        fprintf('Ã»ÓĞĞèÒª·ÖÎöµÄÔË¶¯¹ì¼££¡\n');
         return;
     end
-    % ç”»å›¾é€‰é¡¹
+    % »­Í¼Ñ¡Ïî
     global FileEntity;
     figId = FileEntity{end}.FigHandle;
     figColor = {'.-b', '.-g', '.-r', '.-m', '.-c', '.-y', '.-w'};
-    % ç”»å›¾
+    % »­Í¼
     figLegend = '';
     for i = 1:min(length(motionTracks), length(figColor)-1)
         Id = DrawMotionTrack(motionTracks{i}, figId, figColor{i});
@@ -21,15 +21,15 @@ function AnalysisMotionTrack(motionTracks, motionFlags)
     end
 end
 
-%% è¿åŠ¨è½¨è¿¹ç”»å›¾
+%% ÔË¶¯¹ì¼£»­Í¼
 function Id = DrawMotionTrack(motionTrack, figId, figColor)
     Id = figId;
-    % è½¨è¿¹
+    % ¹ì¼£
     global g_drawTrack;
     if g_drawTrack
         Id = DrawTrack(motionTrack, Id, figColor);
     end
-    % é€Ÿåº¦
+    % ËÙ¶È
     global g_drawTimeSpeed;
     global g_drawTimeAcc;
     global g_drawTimeJerk;
@@ -39,44 +39,44 @@ function Id = DrawMotionTrack(motionTrack, figId, figColor)
     end
     motionSpeed = GetSpeed(motionTrack);
     if g_drawTimeSpeed
-        Id = DrawMotionWithTitle(motionSpeed, Id, figColor, 'æ—¶é—´-é€Ÿåº¦å›¾');
+        Id = DrawMotionWithTitle(motionSpeed, Id, figColor, 'Ê±¼ä-ËÙ¶ÈÍ¼');
     end
     if g_drawDistSpeed
         Id = DrawDistSpeed(motionSpeed, Id, figColor);
     end
-    % åŠ é€Ÿåº¦
+    % ¼ÓËÙ¶È
     if ~g_drawTimeAcc && ~g_drawTimeJerk
         return;
     end
     motionAcc = GetAcc(motionSpeed);
     if g_drawTimeAcc
-        Id = DrawMotionWithTitle(motionAcc, Id, figColor, 'æ—¶é—´-åŠ é€Ÿåº¦å›¾');
+        Id = DrawMotionWithTitle(motionAcc, Id, figColor, 'Ê±¼ä-¼ÓËÙ¶ÈÍ¼');
     end
-    % åŠ åŠ é€Ÿåº¦
+    % ¼Ó¼ÓËÙ¶È
     if ~g_drawTimeJerk
         return;
     end
     motionJerk = GetAcc(motionAcc);
-    Id = DrawMotionWithTitle(motionJerk, Id, figColor, 'æ—¶é—´-åŠ åŠ é€Ÿåº¦å›¾');
+    Id = DrawMotionWithTitle(motionJerk, Id, figColor, 'Ê±¼ä-¼Ó¼ÓËÙ¶ÈÍ¼');
 end
 
-%% è½¨è¿¹ç”»å›¾
+%% ¹ì¼£»­Í¼
 function Id = DrawTrack(motionTrack, figId, figColor)
     Id = figId;
     global g_SingleAxisMode;
     if g_SingleAxisMode
-        fprintf('å•è½´æ¨¡å¼ä¸‹ä¸æ”¯æŒç”»è½¨è¿¹å›¾ï¼\n');
+        fprintf('µ¥ÖáÄ£Ê½ÏÂ²»Ö§³Ö»­¹ì¼£Í¼£¡\n');
         return;
     end
     if size(motionTrack,2) < 1
-        fprintf('æ²¡æœ‰ç”¨äºç”»è½¨è¿¹å›¾çš„æ•°æ®ï¼\n');
+        fprintf('Ã»ÓĞÓÃÓÚ»­¹ì¼£Í¼µÄÊı¾İ£¡\n');
         return;
     end
     if size(motionTrack,2) > 3
-        fprintf('ä¸æ”¯æŒè¶…è¿‡3ç»´çš„è½¨è¿¹ä½œå›¾ï¼šå®é™…ç»´æ•°ä¸º%d\n', size(motionTrack,2));
+        fprintf('²»Ö§³Ö³¬¹ı3Î¬µÄ¹ì¼£×÷Í¼£ºÊµ¼ÊÎ¬ÊıÎª%d\n', size(motionTrack,2));
         return;
     end
-    % ç”»å›¾
+    % »­Í¼
     Id = Id + 1;
     figure(Id);
     hold on;
@@ -89,11 +89,11 @@ function Id = DrawTrack(motionTrack, figId, figColor)
         view([1 1 1]);
     end
     axis equal;
-    title('è½¨è¿¹å›¾');
+    title('¹ì¼£Í¼');
     grid on;
 end
 
-%% è·å–é€Ÿåº¦
+%% »ñÈ¡ËÙ¶È
 function motionSpeed = GetSpeed(motionTrack)
     global g_period;
     [row, column] = size(motionTrack);
@@ -107,7 +107,7 @@ function motionSpeed = GetSpeed(motionTrack)
     end
 end
 
-%% è·å–åŠ é€Ÿåº¦
+%% »ñÈ¡¼ÓËÙ¶È
 function motionAcc = GetAcc(motionSpeed)
     global g_period;
     [row, column] = size(motionSpeed);
@@ -120,19 +120,19 @@ function motionAcc = GetAcc(motionSpeed)
     end
 end
 
-%% æ ¹æ®æ ‡é¢˜ç”»å›¾ï¼ˆé€Ÿåº¦ã€åŠ é€Ÿåº¦ã€åŠ åŠ é€Ÿåº¦ï¼‰
+%% ¸ù¾İ±êÌâ»­Í¼£¨ËÙ¶È¡¢¼ÓËÙ¶È¡¢¼Ó¼ÓËÙ¶È£©
 function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
     Id = figId;
     global g_SingleAxisMode;
-    % æ ¹æ®ç»´æ•°å†³å®šå›¾åƒå¸ƒå±€ï¼šç¬¬ä¸€åˆ—ä¸ºæ—¶é—´ï¼Œæœ€åä¸€åˆ—ä¸ºæ‰€æœ‰ç»´æ•°çš„åˆ
+    % ¸ù¾İÎ¬Êı¾ö¶¨Í¼Ïñ²¼¾Ö£ºµÚÒ»ÁĞÎªÊ±¼ä£¬×îºóÒ»ÁĞÎªËùÓĞÎ¬ÊıµÄºÏ
     column = size(motionParam,2);
     if column < 3
-        fprintf('é”™è¯¯çš„å‚æ•°ï¼šæ•°æ®ç»´æ•°ä¸è¶³ï¼\n');
+        fprintf('´íÎóµÄ²ÎÊı£ºÊı¾İÎ¬Êı²»×ã£¡\n');
         return;
     end
-    preTitle = {'Xè½´', 'Yè½´', 'Zè½´', 'åˆ'};
+    preTitle = {'XÖá', 'YÖá', 'ZÖá', 'ºÏ'};
     if column == 3
-        % ä¸€ç»´æ•°æ®ï¼šåªç”»å•è½´æ•°æ®
+        % Ò»Î¬Êı¾İ£ºÖ»»­µ¥ÖáÊı¾İ
         Id = Id + 1;
         figure(Id);
         hold on;
@@ -140,7 +140,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
         title([preTitle{1}, figTitle]);
         axis auto; grid on;
     elseif column == 4 && ~g_SingleAxisMode
-        % äºŒç»´æ•°æ®ï¼šç”»å•è½´æ•°æ®å’Œåˆæ•°æ®
+        % ¶şÎ¬Êı¾İ£º»­µ¥ÖáÊı¾İºÍºÏÊı¾İ
         Id = Id + 1;
         figure(Id);
         handleSub = cell(3,1);
@@ -158,7 +158,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
         end
         linkaxes([handleSub{1}, handleSub{2}, handleSub{3}], 'x');
     elseif column == 5 && ~g_SingleAxisMode
-        % ä¸‰ç»´æ•°æ®ï¼šç”»å•è½´æ•°æ®å’Œåˆæ•°æ®
+        % ÈıÎ¬Êı¾İ£º»­µ¥ÖáÊı¾İºÍºÏÊı¾İ
         for i = 1:2:3
             Id = Id + 1;
             figure(Id);
@@ -173,7 +173,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
             linkaxes([handleSub{1}, handleSub{2}], 'x');
         end
     else
-        % åªç”»å•è½´æ•°æ®ï¼šè¶…è¿‡ä¸‰ç»´çš„æ•°æ®é»˜è®¤ä¸ç”»åˆæ•°æ®
+        % Ö»»­µ¥ÖáÊı¾İ£º³¬¹ıÈıÎ¬µÄÊı¾İÄ¬ÈÏ²»»­ºÏÊı¾İ
         for i = 1:2:column-3
             Id = Id + 1;
             figure(Id);
@@ -182,7 +182,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
                 handleSub{j} = subplot(2,1,j);
                 hold on;
                 plot(motionParam(:,1), motionParam(:,i+j), figColor);
-                title(['ç¬¬', num2str(i+j-1), 'ç»´', figTitle]);
+                title(['µÚ', num2str(i+j-1), 'Î¬', figTitle]);
                 axis auto; grid on;
             end
             linkaxes([handleSub{1}, handleSub{2}], 'x');
@@ -192,23 +192,23 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
             figure(Id);
             hold on;
             plot(motionParam(:,1), motionParam(:,column-1), figColor);
-            title(['ç¬¬', num2str(column-1), 'ç»´', figTitle]);
+            title(['µÚ', num2str(column-1), 'Î¬', figTitle]);
             axis auto; grid on;
         end
     end
 end
 
-%% ç”»è·ç¦»-é€Ÿåº¦å›¾
+%% »­¾àÀë-ËÙ¶ÈÍ¼
 function Id = DrawDistSpeed(motionSpeed, figId, figColor)
     Id = figId;
     global g_SingleAxisMode;
     if g_SingleAxisMode
-        fprintf('å•è½´æ¨¡å¼ä¸‹ä¸æ”¯æŒç”»è·ç¦»-è½¨è¿¹å›¾ï¼\n');
+        fprintf('µ¥ÖáÄ£Ê½ÏÂ²»Ö§³Ö»­¾àÀë-¹ì¼£Í¼£¡\n');
         return;
     end
     [row, column] = size(motionSpeed);
     if column < 3 || column > 5
-        error('%dç»´æ•°æ®ä¸æ”¯æŒç”»è·ç¦»-é€Ÿåº¦å›¾ï¼\n', column-2);
+        error('%dÎ¬Êı¾İ²»Ö§³Ö»­¾àÀë-ËÙ¶ÈÍ¼£¡\n', column-2);
     end
     global g_period;
     distSpeed = zeros(row,2);
@@ -218,11 +218,11 @@ function Id = DrawDistSpeed(motionSpeed, figId, figColor)
         distSpeed(i,1) = distSpeed(i-1,1) + motionSpeed(i,column) * g_period;
         distSpeed(i,2) = motionSpeed(i,column);
     end
-    % ç”»å›¾
+    % »­Í¼
     Id = figId + 1;
     figure(Id);
     hold on;
     plot(distSpeed(:,1), distSpeed(:,2), figColor);
-    title('è·ç¦»-é€Ÿåº¦å›¾');
+    title('¾àÀë-ËÙ¶ÈÍ¼');
     grid on;
 end
