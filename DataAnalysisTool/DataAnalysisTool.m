@@ -191,7 +191,32 @@ function edit_DataFormat_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_DataFormat as text
 %        str2double(get(hObject,'String')) returns contents of edit_DataFormat as a double
 dataFormat = get(hObject, 'String');
-% 检查数据格式
+% 检查数据格式：格式化数据只能包含%f和%c
+hasError = 1;
+for i = 1:length(dataFormat)
+    c = dataFormat(i);
+    if c ~= '%'
+        continue;
+    end
+    if i == length(dataFormat)
+        hasError = 1;
+        break;
+    end
+    % 判断下一个字符是否为f或c
+    c = dataFormat(i+1);
+    if c ~= 'f' && c ~= 'c'
+        hasError = 1;
+        break;
+    end
+    if c == 'f'
+        hasError = 0;
+    end
+end
+if hasError
+    set(hObject, 'String', handles.metricdata.dataFormat);
+    errordlg('请输入正确的数据格式，数据格式中必须包含有%f，也可以包含有%c（其中，%f代表数值，%c代表字符）！', 'Warning');
+    return;
+end
 handles.metricdata.dataFormat = dataFormat;
 guidata(hObject, handles);
 

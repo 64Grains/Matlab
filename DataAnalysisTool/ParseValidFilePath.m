@@ -1,17 +1,16 @@
 %% 解析出有效的文件路径
-function vecValidFilePaths = ParseValidFilePath(vecOrigFilePaths)
-    nLength = length(vecOrigFilePaths);
-    vecValidFilePaths = cell(nLength,1);
-    nIndex = 1;
-    for i = 1:nLength
-        if ~isempty(vecOrigFilePaths{i})
-            vecValidFilePaths{nIndex} = vecOrigFilePaths{i};
-            nIndex = nIndex + 1;
+function validFilePaths = ParseValidFilePath(origFilePaths)
+    validFilePaths = cell(length(origFilePaths),1);
+    index = 1;
+    for i = 1:length(origFilePaths)
+        if ~isempty(origFilePaths{i})
+            validFilePaths{index} = origFilePaths{i};
+            index = index + 1;
         end
     end
-    if 1 == nIndex
-        vecValidFilePaths = [];
+    if 1 == index
+        validFilePaths = [];
     else
-        vecValidFilePaths = vecValidFilePaths(1:nIndex-1);
+        validFilePaths = validFilePaths(1:index-1);
     end
 end
