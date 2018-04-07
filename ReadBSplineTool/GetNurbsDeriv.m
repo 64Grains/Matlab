@@ -96,6 +96,9 @@ function nIndex = FindSpan(nLevel, vecKnots, nKnot)
     % 特殊情况
     if nKnot == vecKnots(nLength)
         nIndex = nLength - nLevel - 1;
+        while vecKnots(nIndex) == vecKnots(nLength)
+            nIndex = nIndex - 1;
+        end
     else
         % 二分搜索
         nLow = 1;
