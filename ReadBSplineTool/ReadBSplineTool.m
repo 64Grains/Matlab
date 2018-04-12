@@ -288,11 +288,11 @@ msgHandle = msgbox('正在准备图像数据, 请耐心等待....', '', 'help');
 hFirst = 0;
 hSecond = 0;
 try
-    if bFirstFileExist
-        hFirst = AnalyseAndDrawGFile(handles.metricdata.FirstFileName, nFigureId+1, 1);
-    end
     if bSecondFileExist
         hSecond = AnalyseAndDrawGFile(handles.metricdata.SecondFileName, nFigureId+1, 2);
+    end
+    if bFirstFileExist
+        hFirst = AnalyseAndDrawGFile(handles.metricdata.FirstFileName, nFigureId+1, 1);
     end
 catch ErrorInfo
     close(msgHandle);

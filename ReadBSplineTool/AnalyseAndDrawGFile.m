@@ -64,7 +64,8 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
                 break;
             end
             % 读取G指令及坐标值
-            [strG90, strG17, strCurGId, nxCurPos, nxCurParam] = AnalyseGCode(strOrig, strG90, strG17, strCurGId, nxCurPos, nxCurParam);
+            [strG90, strG17, strCurGId, nxCurPos, nxCurParam] =...
+                AnalyseGCode(strOrig, strG90, strG17, strCurGId, nxCurPos, nxCurParam);
             % 判断G指令类型
             if isempty(strLastGId) && isempty(strCurGId)
                 continue;
@@ -210,7 +211,7 @@ function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
     end
     % 存储数据点
     nPointIndex = g_cellPointCache{nHandleIndex}.index;
-    if nPointIndex > 0 && ~isequal(g_cellPointCache{nHandleIndex}.points(nPointIndex,:), vecPoints(1,:))
+    if nPointIndex > 0 && norm(g_cellPointCache{nHandleIndex}.points(nPointIndex,:) - vecPoints(1,:)) > 0.001
         % 当前数据点与缓存的数据点不是首尾相连的
         vecNewPoints = g_cellPointCache{nHandleIndex}.points(1:nPointIndex,:);
         PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color);
