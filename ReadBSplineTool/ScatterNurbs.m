@@ -8,15 +8,24 @@
 function vecPoints = ScatterNurbs(nurbs, nDeflection)
     % 检查参数
     nurbs = CheckNurbs(nurbs);
-    % 如果是闭合图形，则按节点值将其分成两部分
+    % 收集节点矢量中非重复节点值
     global g_nCompareError;
-    if norm(nurbs.vecControlPoints(end,:) - nurbs.vecControlPoints(1,:)) < g_nCompareError
-        nMidKnot = 0.5 * (nurbs.vecKnots(end) + nurbs.vecKnots(1));
-        vecFrontPoints = PerformNurbs(nurbs, nDeflection, nurbs.vecKnots(1), nMidKnot);
-        vecBackPoints = PerformNurbs(nurbs, nDeflection, nMidKnot, nurbs.vecKnots(end));
-        vecPoints = [vecFrontPoints(1:end-1,:); vecBackPoints];
-    else
-        vecPoints = PerformNurbs(nurbs, nDeflection, nurbs.vecKnots(1), nurbs.vecKnots(end));
+    vecDispKnots = nurbs.vecKnots;
+    nIndex = 1;
+    for i = 2:length(nurbs.vecKnots)
+        if abs(vecDispKnots(nIndex) - nurbs.vecKnots(i)) > g_nCompareError / 2
+            nIndex = nIndex + 1;
+            vecDispKnots(nIndex) = nurbs.vecKnots(i);
+        end
+    end
+    vecDispKnots = vecDispKnots(1:nIndex);
+    % 将每两个非重复节点值均分为两部分，递归计算NURBS曲线的离散点
+    vecPoints = nurbs.vecControlPoints(1,:);
+    for i = 2:length(vecDispKnots)
+        nMidKnot = 0.5 * (vecDispKnots(i-1) + vecDispKnots(i));
+        vecFrontPoints = PerformNurbs(nurbs, nDeflection, vecDispKnots(i-1), nMidKnot);
+        vecBackPoints = PerformNurbs(nurbs, nDeflection, nMidKnot, vecDispKnots(i));
+        vecPoints = [vecPoints(1:end-1,:); vecFrontPoints(1:end-1,:); vecBackPoints];
     end
 end
 
