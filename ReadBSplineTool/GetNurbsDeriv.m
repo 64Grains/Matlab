@@ -12,7 +12,7 @@ function [nxDeriv0, nxDeriv1, nxDeriv2] = GetNurbsDeriv(nurbs, nKnot)
     if nurbs.bRational
         % 有理B样条曲线：利用莱布尼茨公式求取
         % 分母的零阶、一阶、二阶导矢
-        [nDenominatorDeriv0, nDenominatorDeriv1, nDenominatorDeriv2] = GetBSplineDeriv(nurbs, nurbs.vecWeights', nKnot);
+        [nDenominatorDeriv0, nDenominatorDeriv1, nDenominatorDeriv2] = GetBSplineDeriv(nurbs, nurbs.vecWeights, nKnot);
         % 分子的零阶、一阶、二阶导矢
         vecWeightedControlPoints = nurbs.vecControlPoints;
         for i = 1:size(nurbs.vecControlPoints,1)
@@ -90,21 +90,21 @@ end
 function nIndex = FindSpan(nLevel, vecKnots, nKnot)
     % 参数检查
     nLength = length(vecKnots);
-    if nKnot < vecKnots(1) || nKnot > vecKnots(nLength)
-        error('节点值u=%f超出节点矢量的范围：下界%f，上界%f', nKnot, vecKnots(1), vecKnots(nLength));
+    if nKnot < vecKnots(nLevel + 1) || nKnot > vecKnots(nLength - nLevel)
+        error('节点值u=%f超出节点矢量的范围：下界%f，上界%f', nKnot, vecKnots(nLevel + 1), vecKnots(nLength - nLevel));
     end
     % 特殊情况
-    if nKnot == vecKnots(nLength)
+    if nKnot == vecKnots(nLength - nLevel)
         nIndex = nLength - nLevel - 1;
-        while vecKnots(nIndex) == vecKnots(nLength)
+        while vecKnots(nIndex) == vecKnots(nLength - nLevel)
             nIndex = nIndex - 1;
         end
     else
         % 二分搜索
-        nLow = 1;
-        nHigh = nLength;
+        nLow = nLevel + 1;
+        nHigh = nLength - nLevel;
         nMid = floor((nLow + nHigh) / 2);
-        while nKnot < vecKnots(nMid) || nKnot >= vecKnots(nMid+1)
+        while nKnot < vecKnots(nMid) || nKnot >= vecKnots(nMid + 1)
             if nKnot < vecKnots(nMid)
                 nHigh = nMid;
             else

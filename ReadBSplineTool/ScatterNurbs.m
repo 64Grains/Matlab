@@ -10,12 +10,13 @@ function vecPoints = ScatterNurbs(nurbs, nDeflection)
     nurbs = CheckNurbs(nurbs);
     % 收集节点矢量中非重复节点值
     global g_nCompareError;
-    vecDispKnots = nurbs.vecKnots;
+    vecValidKnots = nurbs.vecKnots(nurbs.nLevel+1:length(nurbs.vecKnots)-nurbs.nLevel);
+    vecDispKnots = vecValidKnots;
     nIndex = 1;
-    for i = 2:length(nurbs.vecKnots)
-        if abs(vecDispKnots(nIndex) - nurbs.vecKnots(i)) > g_nCompareError / 2
+    for i = 2:length(vecValidKnots)
+        if abs(vecDispKnots(nIndex) - vecValidKnots(i)) > g_nCompareError / 2
             nIndex = nIndex + 1;
-            vecDispKnots(nIndex) = nurbs.vecKnots(i);
+            vecDispKnots(nIndex) = vecValidKnots(i);
         end
     end
     vecDispKnots = vecDispKnots(1:nIndex);
