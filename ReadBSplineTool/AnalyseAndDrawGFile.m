@@ -26,9 +26,9 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
     % 程序提前结束时的参数
     bForceEnd = false;
     % B样条曲线幂次、节点矢量和控制点
-    nurbs.nLevel = 0;
+    nurbs.nDegree = 0;
     nurbs.vecKnots = [];
-    nurbs.vecControlPoints = [];
+    nurbs.vecPoles = [];
     nurbs.vecWeights = [];
     % 缓存的数据点
     global g_nMaxCachePoints;
@@ -90,13 +90,13 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
             % 检查上一指令是否是B样条曲线
             if ~strcmp(strLastGId, strCurGId) && strcmp(strLastGId, 'G6.2')
                 % 离散B样条曲线上的点
-                nurbs.vecControlPoints = nurbs.vecControlPoints(1:size(nurbs.vecControlPoints,1)-nurbs.nLevel-1,:);
+                nurbs.vecPoles = nurbs.vecPoles(1:size(nurbs.vecPoles,1)-nurbs.nDegree-1,:);
                 vecPoints = ScatterNurbs(nurbs, g_nScatterPrecision);
                 StoreCellPointCache(vecPoints, 3, nFigId);
-                StoreCellPointCache(nurbs.vecControlPoints, 4, nFigId);
-                nurbs.nLevel = 0;
+                StoreCellPointCache(nurbs.vecPoles, 4, nFigId);
+                nurbs.nDegree = 0;
                 nurbs.vecKnots = [];
-                nurbs.vecControlPoints = [];
+                nurbs.vecPoles = [];
                 nurbs.vecWeights = [];
             end
             % 分析坐标值
@@ -111,29 +111,29 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
                     % 检查是否有两个相连的B样条曲线指令
                     if strcmp(strLastGId, 'G6.2')
                         % 离散B样条曲线上的点
-                        nurbs.vecControlPoints = nurbs.vecControlPoints(1:size(nurbs.vecControlPoints,1)-nurbs.nLevel-1,:);
+                        nurbs.vecPoles = nurbs.vecPoles(1:size(nurbs.vecPoles,1)-nurbs.nDegree-1,:);
                         vecPoints = ScatterNurbs(nurbs, g_nScatterPrecision);
                         StoreCellPointCache(vecPoints, 3, nFigId);
-                        StoreCellPointCache(nurbs.vecControlPoints, 4, nFigId);
+                        StoreCellPointCache(nurbs.vecPoles, 4, nFigId);
                         nurbs.vecKnots = [];
-                        nurbs.vecControlPoints = [];
+                        nurbs.vecPoles = [];
                         nurbs.vecWeights = [];
                     end
-                    nurbs.nLevel = nxCurParam(5);
+                    nurbs.nDegree = nxCurParam(5);
                 end
                 % B样条曲线的节点矢量
                 if ~isinf(nxCurParam(3))
                     nurbs.vecKnots = [nurbs.vecKnots; nxCurParam(3)];
                 end
                 % B样条曲线的控制点
-                if 0 == size(nurbs.vecControlPoints,1)
-                    nurbs.vecControlPoints = nxCurPos;
+                if 0 == size(nurbs.vecPoles,1)
+                    nurbs.vecPoles = nxCurPos;
                     % 控制点的权值
                     if ~isinf(nxCurParam(4))
                         nurbs.vecWeights = nxCurParam(4);
                     end
                 else
-                    nurbs.vecControlPoints = [nurbs.vecControlPoints; nxCurPos];
+                    nurbs.vecPoles = [nurbs.vecPoles; nxCurPos];
                     if ~isinf(nxCurParam(4))
                         nurbs.vecWeights = [nurbs.vecWeights; nxCurParam(4)];
                     end
@@ -157,10 +157,10 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
     % 最后一段为B样条曲线
     if strcmp(strLastGId, 'G6.2')
         % 离散B样条曲线上的点
-        nurbs.vecControlPoints = nurbs.vecControlPoints(1:size(nurbs.vecControlPoints,1)-nurbs.nLevel-1,:);
+        nurbs.vecPoles = nurbs.vecPoles(1:size(nurbs.vecPoles,1)-nurbs.nDegree-1,:);
         vecPoints = ScatterNurbs(nurbs, g_nScatterPrecision);
         StoreCellPointCache(vecPoints, 3, nFigId);
-        StoreCellPointCache(nurbs.vecControlPoints, 4, nFigId);
+        StoreCellPointCache(nurbs.vecPoles, 4, nFigId);
     end
     % 刷新缓存
     for i = 1:g_nHandleCount

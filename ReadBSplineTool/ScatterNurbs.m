@@ -1,16 +1,16 @@
 %% 按指定误差离散NURBS曲线
 % NURBS曲线信息如下：
-%   nurbs.nLevel -------------- 次数
-%   nurbs.vecKnots ------------ 节点矢量
-%   nurbs.vecControlPoints ---- 控制点
-%   nurbs.vecWeights ---------- 控制点对应的权值点
-%   nurbs.bRational ----------- 是否为有理B样条曲线
+%   nurbs.nDegree ------ 次数
+%   nurbs.vecKnots ----- 节点矢量
+%   nurbs.vecPoles ----- 控制点
+%   nurbs.vecWeights --- 控制点对应的权值点
+%   nurbs.bRational ---- 是否为有理B样条曲线
 function vecPoints = ScatterNurbs(nurbs, nDeflection)
     % 检查参数
     nurbs = CheckNurbs(nurbs);
     % 收集节点矢量中非重复节点值
     global g_nCompareError;
-    vecValidKnots = nurbs.vecKnots(nurbs.nLevel+1:length(nurbs.vecKnots)-nurbs.nLevel);
+    vecValidKnots = nurbs.vecKnots(nurbs.nDegree+1:length(nurbs.vecKnots)-nurbs.nDegree);
     vecDispKnots = vecValidKnots;
     nIndex = 1;
     for i = 2:length(vecValidKnots)
@@ -21,7 +21,7 @@ function vecPoints = ScatterNurbs(nurbs, nDeflection)
     end
     vecDispKnots = vecDispKnots(1:nIndex);
     % 将每两个非重复节点值均分为两部分，递归计算NURBS曲线的离散点
-    vecTempPoints = nurbs.vecControlPoints(1,:);
+    vecTempPoints = nurbs.vecPoles(1,:);
     for i = 2:length(vecDispKnots)
         nMidKnot = 0.5 * (vecDispKnots(i-1) + vecDispKnots(i));
         vecFrontPoints = PerformNurbs(nurbs, nDeflection, vecDispKnots(i-1), nMidKnot);
