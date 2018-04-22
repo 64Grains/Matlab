@@ -21,13 +21,39 @@ function vecPoints = ScatterNurbs(nurbs, nDeflection)
     end
     vecDispKnots = vecDispKnots(1:nIndex);
     % 将每两个非重复节点值均分为两部分，递归计算NURBS曲线的离散点
-    vecPoints = nurbs.vecControlPoints(1,:);
+    vecTempPoints = nurbs.vecControlPoints(1,:);
     for i = 2:length(vecDispKnots)
         nMidKnot = 0.5 * (vecDispKnots(i-1) + vecDispKnots(i));
         vecFrontPoints = PerformNurbs(nurbs, nDeflection, vecDispKnots(i-1), nMidKnot);
         vecBackPoints = PerformNurbs(nurbs, nDeflection, nMidKnot, vecDispKnots(i));
-        vecPoints = [vecPoints(1:end-1,:); vecFrontPoints(1:end-1,:); vecBackPoints];
+        vecTempPoints = [vecTempPoints(1:end-1,:); vecFrontPoints(1:end-1,:); vecBackPoints];
     end
+    % 合并共线点
+    vecPoints = zeros(size(vecTempPoints));
+    vecPoints(1,:) = vecTempPoints(1,:);
+    nIndex = 1;
+    nTempIndex = 2;
+    while nTempIndex <= size(vecTempPoints,1)
+        if norm(vecTempPoints(nTempIndex,:) - vecPoints(nIndex,:)) > g_nCompareError
+            nIndex = nIndex + 1;
+            vecPoints(nIndex,:) = vecTempPoints(nTempIndex,:);
+            break;
+        end
+        nTempIndex = nTempIndex + 1;
+    end
+    if nTempIndex >= size(vecTempPoints,1)
+        vecPoints = vecPoints(1:nIndex,:);
+        return;
+    end
+    for i = nTempIndex+1:size(vecTempPoints,1)
+        if JudgeCollinearPoints(vecPoints(nIndex-1,:), vecPoints(nIndex,:), vecTempPoints(i,:))
+            vecPoints(nIndex,:) = vecTempPoints(i,:);
+        else
+            nIndex = nIndex + 1;
+            vecPoints(nIndex,:) = vecTempPoints(i,:);
+        end
+    end
+    vecPoints = vecPoints(1:nIndex,:);
 end
 
 %% 按指定精度离散指定区间的NURBS曲线
@@ -81,9 +107,7 @@ function vecPointsNew = QuasiFleche(nurbs, nDeflection2, knotInfoStart, knotInfo
     end
     
     if nTheFleche < nDeflection2
-        if norm(vecPointsNew(end,:) - knotInfoNext.nxDeriv0) > 0
-            vecPointsNew = [vecPointsNew; knotInfoNext.nxDeriv0];
-        end
+        vecPointsNew = [vecPointsNew; knotInfoNext.nxDeriv0];
     else
         vecPointsNew = QuasiFleche(nurbs, nDeflection2, knotInfoStart, knotInfoNext, 3, nEps, vecPointsNew);
     end
@@ -92,4 +116,10 @@ function vecPointsNew = QuasiFleche(nurbs, nDeflection2, knotInfoStart, knotInfo
         nPointMin = nPointMin - (size(vecPointsNew,1) - nPointSize);
         vecPointsNew = QuasiFleche(nurbs, nDeflection2, knotInfoNext, knotInfoEnd, nPointMin, nEps, vecPointsNew);
     end
+end
+
+%% 检查三点是否共线
+function bCollinear = JudgeCollinearPoints(nxPoint1, nxPoint2, nxPoint3)
+    global g_nCompareError;
+    bCollinear = abs(norm(nxPoint2 - nxPoint1) + norm(nxPoint3 - nxPoint2) - norm(nxPoint3 - nxPoint1)) < g_nCompareError;
 end

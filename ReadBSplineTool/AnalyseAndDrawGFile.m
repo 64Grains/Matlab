@@ -194,7 +194,7 @@ end
 %% 存储缓存数据点
 function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
     % 参数检查
-    if size(vecPoints,1) < 2
+    if size(vecPoints,1) < 1
         error('错误的参数：数据点数为%f\n', size(vecPoints,1));
     end
     global g_nHandleCount;
