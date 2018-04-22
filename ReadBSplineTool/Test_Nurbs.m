@@ -8,6 +8,9 @@ function Test_Nurbs()
     clear all;clc;close all;
     % 读取NURBS曲线
     nurbs = ReadNurbsFromFile('test\circle.nc');
+    if isempty(nurbs)
+        return;
+    end
     % 测试离散方式
     Test_NurbsScatter(nurbs);
     % 测试导矢
