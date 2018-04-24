@@ -12,14 +12,14 @@ function vecNurbs = DivideNurbs(nurbs)
     global g_nCompareError;
     nStartIndex = 1;
     while true
-        if nurbs.vecKnots(nStartIndex) - nurbs.vecKnots(nurbs.nDegree+1) > g_nCompareError
+        if abs(nurbs.vecKnots(nStartIndex) - nurbs.vecKnots(nurbs.nDegree+1)) < g_nCompareError
             break;
         end
         nStartIndex = nStartIndex + 1;
     end
     nEndIndex = length(nurbs.vecKnots);
     while true
-        if nurbs.vecKnots(nEndIndex) - nurbs.vecKnots(length(nurbs.vecKnots)-nurbs.nDegree) < -g_nCompareError
+        if abs(nurbs.vecKnots(nEndIndex) - nurbs.vecKnots(length(nurbs.vecKnots)-nurbs.nDegree)) < g_nCompareError
             break;
         end
         nEndIndex = nEndIndex - 1;
@@ -29,7 +29,7 @@ function vecNurbs = DivideNurbs(nurbs)
     nIndex = 0;
     nFlagKnot = nurbs.vecKnots(nStartIndex);
     nRepeatCount = 1;
-    for i = nStartIndex+1:nEndIndex+1
+    for i = nStartIndex+1:nEndIndex
         if abs(nurbs.vecKnots(i) - nFlagKnot) < g_nCompareError
             nRepeatCount = nRepeatCount + 1;
             continue;
@@ -43,6 +43,13 @@ function vecNurbs = DivideNurbs(nurbs)
         end
         nFlagKnot = nurbs.vecKnots(i);
         nRepeatCount = 1;
+    end
+    if nRepeatCount > 1
+        nInsertCount = nurbs.nDegree + 1 - nRepeatCount;
+        for j = 1:nInsertCount
+            nIndex = nIndex + 1;
+            vecInsertKnot(nIndex) = nFlagKnot;
+        end
     end
     vecInsertKnot = vecInsertKnot(1:nIndex);
     % 节点细化
@@ -138,15 +145,28 @@ function vecNurbs = SectionNurbs(nurbs)
     vecNurbs = cell(size(nurbs.vecPoles,1),1);
     nIndex = 0;
     % 第一段NURBS曲线段
-    nKnotIndex = nurbs.nDegree + 1;
-    nPointIndex = 0;
+    global g_nCompareError;
+    nStartIndex = 1;
+    while true
+        if abs(nurbs.vecKnots(nStartIndex) - nurbs.vecKnots(nurbs.nDegree+1)) < g_nCompareError
+            break;
+        end
+        nStartIndex = nStartIndex + 1;
+    end
+    nEndIndex = length(nurbs.vecKnots);
+    while true
+        if abs(nurbs.vecKnots(nEndIndex) - nurbs.vecKnots(length(nurbs.vecKnots)-nurbs.nDegree)) < g_nCompareError
+            break;
+        end
+        nEndIndex = nEndIndex - 1;
+    end
+    nPointIndex = nStartIndex-1;
     nurbsNew.nDegree = nurbs.nDegree;
-    nurbsNew.vecKnots = nurbs.vecKnots(1:nKnotIndex);
+    nurbsNew.vecKnots = [];
     nurbsNew.vecWeights = [];
     nRepeatCount = 1;
-    nFlagKnot = nurbs.vecKnots(nKnotIndex+1);
-    global g_nCompareError;
-    for i = nKnotIndex+2:length(nurbs.vecKnots)-nurbs.nDegree
+    nFlagKnot = nurbs.vecKnots(nStartIndex);
+    for i = nStartIndex+1:nEndIndex
         % 重节点
         if abs(nurbs.vecKnots(i) - nFlagKnot) < g_nCompareError
             nRepeatCount = nRepeatCount + 1;
@@ -163,6 +183,11 @@ function vecNurbs = SectionNurbs(nurbs)
             error('错误的参数：节点重复度为%d\n', nRepeatCount);
         end
         nurbsNew.vecKnots = [nurbsNew.vecKnots; ones(nRepeatCount,1) * nFlagKnot];
+        if length(nurbsNew.vecKnots) == nRepeatCount
+            nFlagKnot = nurbs.vecKnots(i);
+            nRepeatCount = 1;
+            continue;
+        end
         nPointCount = length(nurbsNew.vecKnots) - nurbsNew.nDegree - 1;
         nurbsNew.vecPoles = nurbs.vecPoles(nPointIndex+1:nPointIndex+nPointCount,:);
         if ~isempty(nurbs.vecWeights)
@@ -178,7 +203,6 @@ function vecNurbs = SectionNurbs(nurbs)
     end
     % 最后一段NURBS曲线段
     nurbsNew.vecKnots = [nurbsNew.vecKnots; ones(nRepeatCount,1) * nFlagKnot];
-    nurbsNew.vecKnots = [nurbsNew.vecKnots; nurbs.vecKnots(length(nurbs.vecKnots)-nurbs.nDegree+1:end)];
     if nPointIndex ~= size(nurbs.vecPoles,1)
         nPointCount = length(nurbsNew.vecKnots) - nurbsNew.nDegree - 1;
         nurbsNew.vecPoles = nurbs.vecPoles(nPointIndex+1:nPointIndex+nPointCount,:);
@@ -190,7 +214,7 @@ function vecNurbs = SectionNurbs(nurbs)
         vecNurbs{nIndex} = nurbsNew;
     end
     vecNurbs = vecNurbs(1:nIndex);
-    if nPointIndex ~= size(nurbs.vecPoles,1)
+    if nPointIndex ~= size(nurbs.vecPoles,1) - (length(nurbs.vecKnots) - nEndIndex);
         error('错误的结果：控制点存在遗漏！\n');
     end
 end
