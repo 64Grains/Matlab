@@ -189,6 +189,12 @@ function InitCellPointCache(nMaxSize, nColorId)
         % 图像颜色
         g_cellPointCache{i}.color = g_vecColor{nColorId}{i};
     end
+    global g_nxMaxRange;
+    global g_nxMinRange;
+    global g_bFirstPoint;
+    g_nxMaxRange = zeros(1,3);
+    g_nxMinRange = zeros(1,3);
+    g_bFirstPoint = 0;
 end
 
 %% 存储缓存数据点
@@ -214,7 +220,7 @@ function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
     if nPointIndex > 0 && norm(g_cellPointCache{nHandleIndex}.points(nPointIndex,:) - vecPoints(1,:)) > 0.001
         % 当前数据点与缓存的数据点不是首尾相连的
         vecNewPoints = g_cellPointCache{nHandleIndex}.points(1:nPointIndex,:);
-        PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color);
+        PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color, 0);
         g_cellPointCache{nHandleIndex}.index = 0;
     end
     % 检查缓存是否装得下
@@ -222,7 +228,7 @@ function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
     nPointIndex = g_cellPointCache{nHandleIndex}.index;
     if nPointIndex + size(vecPoints,1) >= g_nMaxCachePoints
         vecNewPoints = [g_cellPointCache{nHandleIndex}.points(1:nPointIndex,:); vecPoints];
-        PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color);
+        PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color, 0);
         g_cellPointCache{nHandleIndex}.index = 0;
         return;
     end
@@ -249,7 +255,7 @@ function FlushCellPointCache(nHandleIndex, nFigId)
         return;
     end
     vecNewPoints = g_cellPointCache{nHandleIndex}.points(1:nPointIndex,:);
-    PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color);
+    PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color, 1);
     g_cellPointCache{nHandleIndex}.index = 0;
 end
 
@@ -371,7 +377,7 @@ function [strG90Out, strG17Out, strCurGIdOut, nxCurPosOut, nxCurParamOut]...
 end
 
 %% 根据坐标视图进行画图
-function PlotFigureByPlane(vecFitPoint, nHandleIndex, nFigId, strColor)
+function PlotFigureByPlane(vecFitPoint, nHandleIndex, nFigId, strColor, bFlush)
     % 参数检查
     global g_nHandleCount;
     if nHandleIndex < 1 || nHandleIndex > g_nHandleCount
@@ -383,6 +389,26 @@ function PlotFigureByPlane(vecFitPoint, nHandleIndex, nFigId, strColor)
             return;
         end
     end
+    % 记录最大最小范围值
+    global g_nxMaxRange;
+    global g_nxMinRange;
+    global g_bFirstPoint;
+    nxMaxRange = [max(vecFitPoint(:,1)), max(vecFitPoint(:,2)), max(vecFitPoint(:,3))];
+    nxMinRange = [min(vecFitPoint(:,1)), min(vecFitPoint(:,2)), min(vecFitPoint(:,3))];
+    if ~g_bFirstPoint
+        g_bFirstPoint = 1;
+        g_nxMaxRange = nxMaxRange;
+        g_nxMinRange = nxMinRange;
+    else
+        for i = 1:3
+            g_nxMaxRange(i) = max([g_nxMaxRange(i), nxMaxRange(i)]);
+            g_nxMinRange(i) = min([g_nxMinRange(i), nxMinRange(i)]);
+        end
+    end
+    if bFlush
+        nSpace = max([abs(g_nxMaxRange(1) - g_nxMinRange(1)), abs(g_nxMaxRange(2) - g_nxMinRange(2)),...
+            abs(g_nxMaxRange(3) - g_nxMinRange(3))]) * 0.05;
+    end
     % 画图
     global g_figHandle;
     global g_strPlane;
@@ -390,13 +416,29 @@ function PlotFigureByPlane(vecFitPoint, nHandleIndex, nFigId, strColor)
     hold on;
     switch g_strPlane
         case '三维视图'
+            if bFlush
+                plot3(g_nxMaxRange(:,1)+nSpace, g_nxMaxRange(:,2)+nSpace, g_nxMaxRange(:,3)+nSpace, 'w');
+                plot3(g_nxMinRange(:,1)-nSpace, g_nxMinRange(:,2)-nSpace, g_nxMinRange(:,3)-nSpace, 'w');
+            end
             g_figHandle(nHandleIndex) = plot3(vecFitPoint(:,1), vecFitPoint(:,2), vecFitPoint(:,3), strColor);
             view([1 1 1]);
         case 'X-Y平面'
+            if bFlush
+                plot(g_nxMaxRange(:,1)+nSpace, g_nxMaxRange(:,2)+nSpace, 'w');
+                plot(g_nxMinRange(:,1)-nSpace, g_nxMinRange(:,2)-nSpace, 'w');
+            end
             g_figHandle(nHandleIndex) = plot(vecFitPoint(:,1), vecFitPoint(:,2), strColor);
         case 'Y-Z平面'
+            if bFlush
+                plot(g_nxMaxRange(:,2)+nSpace, g_nxMaxRange(:,3)+nSpace, 'w');
+                plot(g_nxMinRange(:,2)-nSpace, g_nxMinRange(:,3)-nSpace, 'w');
+            end
             g_figHandle(nHandleIndex) = plot(vecFitPoint(:,2), vecFitPoint(:,3), strColor);
         case 'Z-X平面'
+            if bFlush
+                plot(g_nxMaxRange(:,3)+nSpace, g_nxMaxRange(:,1)+nSpace, 'w');
+                plot(g_nxMinRange(:,3)-nSpace, g_nxMinRange(:,1)-nSpace, 'w');
+            end
             g_figHandle(nHandleIndex) = plot(vecFitPoint(:,3), vecFitPoint(:,1), strColor);
         otherwise
             error('错误的视图：%s', g_strPlane);

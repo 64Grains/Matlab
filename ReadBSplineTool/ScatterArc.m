@@ -42,6 +42,11 @@ function vecPoints = ScatterArc(strG17, strCurGId, nxLastPos, nxCurPos, nxCurPar
     if strcmp(strCurGId, 'G2')
         nSinValue = -nSinValue;
     end
+    if nCosValue > 1
+        nCosValue = 1;
+    elseif nCosValue < -1
+        nCosValue = -1;
+    end
     nAngle = acos(nCosValue);
     if nSinValue < 0
         nAngle = 2 * pi - nAngle;
