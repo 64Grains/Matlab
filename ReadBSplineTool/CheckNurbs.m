@@ -16,10 +16,8 @@ function nurbsNew = CheckNurbs(nurbs)
         error('错误的参数：NURBS曲线控制点数为%d，控制点对应的权值数为%d\n',...
             size(nurbs.vecPoles,1), length(nurbs.vecWeights));
     end
-    % 数值比较精度
-    global g_nCompareError;
-    g_nCompareError = 1e-9;
     % 检查是否为有理B样条曲线
+    global g_nCompareError;
     nurbsNew = nurbs;
     nurbsNew.bRational = false;
     for i = 2:length(nurbsNew.vecWeights)

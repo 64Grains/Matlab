@@ -6,30 +6,36 @@
 %   nurbs.vecWeights --- 控制点对应的权值点
 %   nurbs.bRational ---- 是否为有理B样条曲线
 function vecPoints = ScatterNurbs(nurbs, nDeflection)
+    % 数值比较精度
     global g_nCompareError;
-    % 分割NURBS曲线
-    vecTempPoints = nurbs.vecPoles(1,:);
-    vecNurbs = DivideNurbs(nurbs);
-    for i = 1:length(vecNurbs)
-        % 检查参数
-        nurbsNew = CheckNurbs(vecNurbs{i});
-        % 收集节点矢量中非重复节点值
-        vecValidKnots = nurbsNew.vecKnots(nurbsNew.nDegree+1:length(nurbsNew.vecKnots)-nurbsNew.nDegree);
-        vecDispKnots = vecValidKnots;
-        nIndex = 1;
-        for j = 2:length(vecValidKnots)
-            if abs(vecDispKnots(nIndex) - vecValidKnots(j)) > g_nCompareError / 2
-                nIndex = nIndex + 1;
-                vecDispKnots(nIndex) = vecValidKnots(j);
+    g_nCompareError = 1e-9;
+    if nurbs.nDegree == 1
+        vecTempPoints = nurbs.vecPoles;
+    else
+        % 分割NURBS曲线
+        vecTempPoints = nurbs.vecPoles(1,:);
+        vecNurbs = DivideNurbs(nurbs);
+        for i = 1:length(vecNurbs)
+            % 检查参数
+            nurbsNew = CheckNurbs(vecNurbs{i});
+            % 收集节点矢量中非重复节点值
+            vecValidKnots = nurbsNew.vecKnots(nurbsNew.nDegree+1:length(nurbsNew.vecKnots)-nurbsNew.nDegree);
+            vecDispKnots = vecValidKnots;
+            nIndex = 1;
+            for j = 2:length(vecValidKnots)
+                if abs(vecDispKnots(nIndex) - vecValidKnots(j)) > g_nCompareError / 2
+                    nIndex = nIndex + 1;
+                    vecDispKnots(nIndex) = vecValidKnots(j);
+                end
             end
-        end
-        vecDispKnots = vecDispKnots(1:nIndex);
-        % 将每两个非重复节点值均分为两部分，递归计算NURBS曲线的离散点
-        for j = 2:length(vecDispKnots)
-            nMidKnot = 0.5 * (vecDispKnots(j-1) + vecDispKnots(j));
-            vecFrontPoints = PerformNurbs(nurbsNew, nDeflection, vecDispKnots(j-1), nMidKnot);
-            vecBackPoints = PerformNurbs(nurbsNew, nDeflection, nMidKnot, vecDispKnots(j));
-            vecTempPoints = [vecTempPoints(1:end-1,:); vecFrontPoints(1:end-1,:); vecBackPoints];
+            vecDispKnots = vecDispKnots(1:nIndex);
+            % 将每两个非重复节点值均分为两部分，递归计算NURBS曲线的离散点
+            for j = 2:length(vecDispKnots)
+                nMidKnot = 0.5 * (vecDispKnots(j-1) + vecDispKnots(j));
+                vecFrontPoints = PerformNurbs(nurbsNew, nDeflection, vecDispKnots(j-1), nMidKnot);
+                vecBackPoints = PerformNurbs(nurbsNew, nDeflection, nMidKnot, vecDispKnots(j));
+                vecTempPoints = [vecTempPoints(1:end-1,:); vecFrontPoints(1:end-1,:); vecBackPoints];
+            end
         end
     end
     % 合并共线点

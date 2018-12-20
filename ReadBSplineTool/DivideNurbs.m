@@ -34,7 +34,7 @@ function vecNurbs = DivideNurbs(nurbs)
             nRepeatCount = nRepeatCount + 1;
             continue;
         end
-        if nRepeatCount > 1
+        if nRepeatCount > 1 || nurbs.nDegree == 1
             nInsertCount = nurbs.nDegree + 1 - nRepeatCount;
             for j = 1:nInsertCount
                 nIndex = nIndex + 1;
