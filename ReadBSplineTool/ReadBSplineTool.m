@@ -82,7 +82,7 @@ global FileEntity;
 if isfield(handles, 'metricdata')
     return;
 end
-display('！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！');
+disp('---------------------------------------------------------------------------');
 % Initialize FileEntity
 FileEntity{1}.FigHandle = 1;
 if size(FileEntity,2) > 1
