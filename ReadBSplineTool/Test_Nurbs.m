@@ -13,7 +13,7 @@ function Test_Nurbs()
     end
     % Test scatter for nurbs node
     nCount = 200;
-    nDeflection = 1e-2;
+    nDeflection = 1e-3;
     Test_NurbsScatter(nurbs, nCount, nDeflection);
     % Test derivative for nurbs node
     Test_NurbsDeriv(nurbs, nCount);
@@ -127,6 +127,7 @@ function Test_NurbsScatter(nurbs, nCount, nDeflection)
     end
     legend('Scatting by uniformly sampled node vector', 'Scatting by bow height error', 'Poles of nurbs node');
     title('Track figure');
+    grid on;
     axis equal;
 end
 
@@ -163,6 +164,7 @@ function Test_NurbsDeriv(nurbs, nCount)
         end
         legend('Differential method', 'Calculation method');
         title(vecTitles{i-1});
+        grid on;
         axis equal;
     end
     % Calculating curvature
@@ -189,4 +191,5 @@ function Test_NurbsDeriv(nurbs, nCount)
     plot(1:length(vecNewCurvature), vecNewCurvature, '.-g');
     legend('Differential method', 'Calculation method');
     title('Curvature figure');
+    grid on;
 end
