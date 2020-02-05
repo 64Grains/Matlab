@@ -1,24 +1,24 @@
-%% 按指定误差离散NURBS曲线
-% NURBS曲线信息如下：
-%   nurbs.nDegree ------ 次数
-%   nurbs.vecKnots ----- 节点矢量
-%   nurbs.vecPoles ----- 控制点
-%   nurbs.vecWeights --- 控制点对应的权值点
-%   nurbs.bRational ---- 是否为有理B样条曲线
+%% Scatter nurbs node by specified error
+% The nurbs node information is as follows:
+%   nurbs.nDegree ------ The degree of nurbs node
+%   nurbs.vecKnots ----- The knot vector of nurbs node
+%   nurbs.vecPoles ----- The poles of nurbs node
+%   nurbs.vecWeights --- The weights of nurbs node
+%   nurbs.bRational ---- Whether it is a rational B-spline node
 function vecPoints = ScatterNurbs(nurbs, nDeflection)
-    % 数值比较精度
+    % Numerical comparison accuracy
     global g_nCompareError;
     g_nCompareError = 1e-9;
     if nurbs.nDegree == 1
         vecTempPoints = nurbs.vecPoles;
     else
-        % 分割NURBS曲线
+        % Divide nurbs node
         vecTempPoints = nurbs.vecPoles(1,:);
         vecNurbs = DivideNurbs(nurbs);
         for i = 1:length(vecNurbs)
-            % 检查参数
+            % Check parameters
             nurbsNew = CheckNurbs(vecNurbs{i});
-            % 收集节点矢量中非重复节点值
+            % Collect unique knot values in the knot vector
             vecValidKnots = nurbsNew.vecKnots(nurbsNew.nDegree+1:length(nurbsNew.vecKnots)-nurbsNew.nDegree);
             vecDispKnots = vecValidKnots;
             nIndex = 1;
@@ -29,7 +29,7 @@ function vecPoints = ScatterNurbs(nurbs, nDeflection)
                 end
             end
             vecDispKnots = vecDispKnots(1:nIndex);
-            % 将每两个非重复节点值均分为两部分，递归计算NURBS曲线的离散点
+            % Divide each two non-repeating knot values into two parts and calculate the scatter points of the nurbs node
             for j = 2:length(vecDispKnots)
                 nMidKnot = 0.5 * (vecDispKnots(j-1) + vecDispKnots(j));
                 vecFrontPoints = PerformNurbs(nurbsNew, nDeflection, vecDispKnots(j-1), nMidKnot);
@@ -38,7 +38,7 @@ function vecPoints = ScatterNurbs(nurbs, nDeflection)
             end
         end
     end
-    % 合并共线点
+    % Merge collinear points
     vecPoints = zeros(size(vecTempPoints));
     vecPoints(1,:) = vecTempPoints(1,:);
     nIndex = 1;
@@ -66,7 +66,7 @@ function vecPoints = ScatterNurbs(nurbs, nDeflection)
     vecPoints = vecPoints(1:nIndex,:);
 end
 
-%% 按指定精度离散指定区间的NURBS曲线
+%%% Scatter nurbs node at specified interval with specified deflection
 function vecPoints = PerformNurbs(nurbs, nDeflection, nStartKnot, nEndKnot)
     vecPoints = [];
     nPointMin = 2;
@@ -75,13 +75,13 @@ function vecPoints = PerformNurbs(nurbs, nDeflection, nStartKnot, nEndKnot)
     [knotInfoStart.nxDeriv0, knotInfoStart.nxDeriv1, knotInfoStart.nxDeriv2] = GetNurbsDeriv(nurbs, knotInfoStart.nKnot);
     [knotInfoEnd.nxDeriv0, knotInfoEnd.nxDeriv1, knotInfoEnd.nxDeriv2] = GetNurbsDeriv(nurbs, knotInfoEnd.nKnot);
     vecPoints = [vecPoints; knotInfoStart.nxDeriv0];
-    % 递归计算
+    % Recursive calculation
     global g_nCompareError;
     nEps = g_nCompareError * g_nCompareError;
     vecPoints = QuasiFleche(nurbs, nDeflection * nDeflection, knotInfoStart, knotInfoEnd, nPointMin, nEps, vecPoints);
 end
 
-%% 按指定精度递归计算离散的NURBS曲线
+%%% Recursively calculate scatter nurbs node with specified accuracy
 function vecPointsNew = QuasiFleche(nurbs, nDeflection2, knotInfoStart, knotInfoEnd, nPointMin, nEps, vecPoints)
     vecPointsNew = vecPoints;
     nPointSize = size(vecPointsNew,1);
@@ -128,7 +128,7 @@ function vecPointsNew = QuasiFleche(nurbs, nDeflection2, knotInfoStart, knotInfo
     end
 end
 
-%% 检查三点是否共线
+%%% Check if the three points are in line
 function bCollinear = JudgeCollinearPoints(nxPoint1, nxPoint2, nxPoint3)
     global g_nCompareError;
     bCollinear = abs(norm(nxPoint2 - nxPoint1) + norm(nxPoint3 - nxPoint2) - norm(nxPoint3 - nxPoint1)) < g_nCompareError;

@@ -1,22 +1,22 @@
-%% 检查NURBS曲线的参数
-% NURBS曲线信息如下：
-%   nurbs.nDegree ------ 次数
-%   nurbs.vecKnots ----- 节点矢量
-%   nurbs.vecPoles ----- 控制点
-%   nurbs.vecWeights --- 控制点对应的权值点
-%   nurbs.bRational ---- 是否为有理B样条曲线
+%% Check the parameters of the nurbs node curve
+% The nurbs node information is as follows:
+%   nurbs.nDegree ------ The degree of nurbs node
+%   nurbs.vecKnots ----- The knot vector of nurbs node
+%   nurbs.vecPoles ----- The poles of nurbs node
+%   nurbs.vecWeights --- The weights of nurbs node
+%   nurbs.bRational ---- Whether it is a rational B-spline node
 function nurbsNew = CheckNurbs(nurbs)
-    % 检查是否为NURBS曲线
+    % Check if it is a nurbs node
     if nurbs.nDegree <= 0 || length(nurbs.vecKnots) < 1 || size(nurbs.vecPoles,1) < 1 ...
             || length(nurbs.vecKnots) ~= size(nurbs.vecPoles,1) + nurbs.nDegree + 1
-        error('错误的参数：NURBS曲线次数为%d，节点矢量数为%d，控制点数为%d\n',...
+        error('Wrong parameters: the degree of nurbs node is %d, the number of knot vector is %d, and the number of poles is %d\n',...
             nurbs.nDegree, length(nurbs.vecKnots), size(nurbs.vecPoles,1));
     end
     if length(nurbs.vecWeights) > 1 && length(nurbs.vecWeights) ~= size(nurbs.vecPoles,1)
-        error('错误的参数：NURBS曲线控制点数为%d，控制点对应的权值数为%d\n',...
+        error('Wrong parameters: the number of poles is %d, and the number of weights is %d\n',...
             size(nurbs.vecPoles,1), length(nurbs.vecWeights));
     end
-    % 检查是否为有理B样条曲线
+    % Check if it is a rational B-spline node
     global g_nCompareError;
     nurbsNew = nurbs;
     nurbsNew.bRational = false;

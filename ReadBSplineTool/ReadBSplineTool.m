@@ -58,7 +58,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-%%% 初始化GUI
+%%% Initialize GUI
 Initialize_gui(hObject, handles);
 
 % UIWAIT makes ReadBSplineTool wait for user response (see UIRESUME)
@@ -76,7 +76,7 @@ function varargout = ReadBSplineTool_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-%%%初始化GUI
+%%% Initialize GUI
 function Initialize_gui(hObject, handles)
 global FileEntity;
 if isfield(handles, 'metricdata')
@@ -99,7 +99,7 @@ end
 % Tool Figure Handle Initialize
 handles.figure1(1);
 % Initialize UI parameter
-handles.metricdata.Plane = 'X-Y平面';
+handles.metricdata.Plane = 'X-Y Plane';
 handles.metricdata.DisplayCP = 0;
 handles.metricdata.IJKIncrementalMode = 0;
 handles.metricdata.ScatterPrecision = 0.01;
@@ -119,7 +119,7 @@ handles.metricdata.PathName = handles.metricdata.PathName(1:n_PathIndex-1);
 handles.metricdata.FirstFileName = '';
 handles.metricdata.SecondFileName = '';
 % Data Process Initialize
-set(handles.popupmenu_view, 'String', {'X-Y平面', 'Y-Z平面', 'Z-X平面', '三维视图'});
+set(handles.popupmenu_view, 'String', {'X-Y Plane', 'Y-Z Plane', 'Z-X Plane', '3D View'});
 set(handles.checkbox_displayControlPoint, 'Value', handles.metricdata.DisplayCP);
 set(handles.checkbox_arcIJKMode, 'Value', handles.metricdata.IJKIncrementalMode);
 set(handles.edit_scatterPrecision, 'String', handles.metricdata.ScatterPrecision);
@@ -134,12 +134,12 @@ set(handles.edit_secondFileControlPoint, 'String', handles.metricdata.secondFile
 set(handles.edit_firstFile, 'String', handles.metricdata.FirstFileName);
 set(handles.edit_secondFile, 'String', handles.metricdata.SecondFileName);
 % Update Tool Figure handles structure
-set(handles.figure1, 'NumberTitle', 'off', 'Name', '数据分析工具');
+set(handles.figure1, 'NumberTitle', 'off', 'Name', 'Read B-spline tool');
 % Save the value of parameters
 guidata(handles.figure1, handles);
 
 
-%%% 选择视图
+%%% Select view
 % --- Executes on selection change in popupmenu_view.
 function popupmenu_view_Callback(hObject, eventdata, handles)
 % hObject    handle to popupmenu_view (see GCBO)
@@ -153,7 +153,7 @@ listContents = cellstr(get(hObject, 'String'));
 strPlane = listContents{nPlaneIndex};
 if isempty(strPlane)
     set(hObject, 'String', handles.metricdata.Plane);
-    errordlg('请选择正确的视图名称！', 'Error');
+    errordlg('Please choose the correct view name!', 'Error');
     return;
 end
 handles.metricdata.Plane = strPlane;
@@ -173,7 +173,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 显示NURBS曲线的控制点
+%%% Display the poles of nurbs node
 % --- Executes on button press in checkbox_displayControlPoint.
 function checkbox_displayControlPoint_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_displayControlPoint (see GCBO)
@@ -186,7 +186,7 @@ handles.metricdata.DisplayCP = bDisplayControlPoint;
 guidata(hObject, handles);
 
 
-%%% 圆心编程IJK增量方式
+%%% Circle programming IJK incremental mode
 % --- Executes on button press in checkbox_arcIJKMode.
 function checkbox_arcIJKMode_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_arcIJKMode (see GCBO)
@@ -199,7 +199,7 @@ handles.metricdata.IJKIncrementalMode = bIJKIncrementalMode;
 guidata(hObject, handles);
 
 
-%%% 曲线离散精度
+%%% Curve scatter precision
 function edit_scatterPrecision_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_scatterPrecision (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -208,9 +208,9 @@ function edit_scatterPrecision_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_scatterPrecision as text
 %        str2double(get(hObject,'String')) returns contents of edit_scatterPrecision as a double
 nScatterPrecision = str2double(get(hObject, 'String'));
-if isnan(nScatterPrecision) || nScatterPrecision < 0.0001 || nScatterPrecision > 1
+if isnan(nScatterPrecision) || nScatterPrecision < 0.00001 || nScatterPrecision > 1
     set(hObject, 'String', handles.metricdata.ScatterPrecision);
-    errordlg('请输入正确的离散精度（取值范围：[0.0001, 1]）！', 'Error');
+    errordlg('Please enter the correct scatter precision (value range: [0.00001, 1])!', 'Error');
     return;
 end
 handles.metricdata.ScatterPrecision = nScatterPrecision;
@@ -230,31 +230,31 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 导入文件
+%%% Importing files
 % --- Executes on button press in pushbutton_importFiles.
 function pushbutton_importFiles_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_importFiles (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%%% 检查加工文件
+%%% Check processing files
 FileName = [];
 try
-    [FileName, PathName] = uigetfile({'*.*', '所有文件(*.*)'}, 'Open File',...
+    [FileName, PathName] = uigetfile({'*.*', 'All files(*.*)'}, 'Open File',...
         'MultiSelect', 'on', handles.metricdata.PathName);
 catch ErrorInfo
-    errordlg(ErrorInfo.message, '错误');
+    errordlg(ErrorInfo.message, 'Error');
     return;
 end
 if isempty(FileName) || isnumeric(FileName)
     return;
 end
-%%% 设置加工文件路径
+%%% Set processing file path
 if ~iscell(FileName)
-    % 只有一个文件
+    % Only one file
     handles.metricdata.PathName = PathName;
     handles.metricdata.FirstFileName = strcat(PathName, FileName);
 elseif length(FileName) > 2
-    errordlg('同时最多只能打开两个文件，请重新选择!', '错误');
+    errordlg('Only two files can be opened at the same time, please select again!', 'Error');
     return;
 else
     handles.metricdata.PathName = PathName;
@@ -266,25 +266,25 @@ set(handles.edit_secondFile, 'String', handles.metricdata.SecondFileName);
 guidata(hObject, handles);
 
 
-%%% 画图比较
+%%% Drawing comparison
 % --- Executes on button press in pushbutton_drawAndCompare.
 function pushbutton_drawAndCompare_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_drawAndCompare (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global FileEntity;
-% 检查加工文件
+% Check processing files
 bFirstFileExist = ~isempty(handles.metricdata.FirstFileName);
 bSecondFileExist = ~isempty(handles.metricdata.SecondFileName);
 if ~bFirstFileExist && ~bSecondFileExist
-    msgbox('请先输入加工文件的路径, 然后再执行该操作!');
+    msgbox('Please enter the path of the processing file before performing this operation!');
     return;
 end
-%%% 设置用于画图的全局变量
+%%% Set global variables for drawing
 GlobalVariable(handles);
-% 画图
+% Drawing
 nFigureId = FileEntity{end}.FigHandle;
-msgHandle = msgbox('正在准备图像数据, 请耐心等待....', '', 'help');
+msgHandle = msgbox('Preparing figure data, please be patient...', '', 'help');
 hFirst = 0;
 hSecond = 0;
 try
@@ -296,17 +296,17 @@ try
     end
 catch ErrorInfo
     close(msgHandle);
-    errordlg(ErrorInfo.message, '错误');
+    errordlg(ErrorInfo.message, 'Error');
     return;
 end
 close(msgHandle);
-% 图例
+% legend
 ExecLegendIntem(handles, bFirstFileExist, hFirst, bSecondFileExist, hSecond);
-% 更新FileEntity
+% Update FileEntity
 nSize = size(FileEntity,2);
 FileEntity{nSize+1}.FigHandle = nFigureId + 1;
 
-%%% 图例
+%%% legend
 function ExecLegendIntem(handles, bFirstFileExist, hFirst, bSecondFileExist, hSecond)
 vecFileFlag = {'line: ', 'arc: ', 'nurbs: ', 'controlpoint: '};
 vecHandles = zeros(1,8);
@@ -339,7 +339,7 @@ end
 legend(vecHandles(1:nIndex), vecFileNames(1:nIndex));
 
 
-%%% 清空图像
+%%% Clear figure
 % --- Executes on button press in pushbutton_clearFigure.
 function pushbutton_clearFigure_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_clearFigure (see GCBO)
@@ -364,12 +364,12 @@ try
         FileEntity{1}.FigHandle = 1;
     end
 catch ErrorInfo
-    errordlg(ErrorInfo.message, '错误');
+    errordlg(ErrorInfo.message, 'Error');
 end
 uiresume(handles.figure1);
 
 
-%%% 关闭工具
+%%% Close tool
 % --- Executes on button press in pushbutton_closeTool.
 function pushbutton_closeTool_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_closeTool (see GCBO)
@@ -380,7 +380,7 @@ clear all;
 
 
 
-%%% 第一个加工文件
+%%% The first processing file
 function edit_firstFile_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_firstFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -390,26 +390,26 @@ function edit_firstFile_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of edit_firstFile as a double
 strFirstFile = get(hObject, 'String');
 if isempty(strFirstFile)
-    % 清空文件
+    % Empty file
     handles.metricdata.FirstFileName = '';
     set(hObject, 'String', handles.metricdata.FirstFileName);
     guidata(hObject, handles);
     return;
 end
-% 检查文件是否存在
+% Check if file exists
 bFileExist = exist(strFirstFile, 'file');
 if 0 == bFileExist || 7 == bFileExist
     set(hObject, 'String', handles.metricdata.FirstFileName);
-    errordlg('文件路径不合法，请输入正确的文件路径！', '错误');
+    errordlg('The file path is invalid. Please enter the correct file path!', 'Error');
     return;
 end
 nxIndex = strfind(strFirstFile, '\');
 if isempty(nxIndex)
     set(hObject, 'String', handles.metricdata.FirstFileName);
-    errordlg('文件路径不合法，请输入正确的文件路径！', '错误');
+    errordlg('The file path is invalid. Please enter the correct file path!', 'Error');
     return;
 else
-    % 加工文件路径
+    % Processing file path
     strFilePath = strFirstFile(1:nxIndex(length(nxIndex)));
     handles.metricdata.PathName = strFilePath;
     handles.metricdata.FirstFileName = strFirstFile;
@@ -431,7 +431,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第二个加工文件
+%%% Second processing file
 function edit_secondFile_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_secondFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -441,26 +441,26 @@ function edit_secondFile_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of edit_secondFile as a double
 strSecondFile = get(hObject, 'String');
 if isempty(strSecondFile)
-    % 清空文件
+    % Empty file
     handles.metricdata.SecondFileName = '';
     set(hObject, 'String', handles.metricdata.SecondFileName);
     guidata(hObject, handles);
     return;
 end
-% 检查文件是否存在
+% Check if file exists
 bFileExist = exist(strSecondFile, 'file');
 if 0 == bFileExist || 7 == bFileExist
     set(hObject, 'String', handles.metricdata.SecondFileName);
-    errordlg('文件路径不合法，请输入正确的文件路径！', '错误');
+    errordlg('The file path is invalid. Please enter the correct file path!', 'Error');
     return;
 end
 nxIndex = strfind(strSecondFile, '\');
 if isempty(nxIndex)
     set(hObject, 'String', handles.metricdata.SecondFileName);
-    errordlg('文件路径不合法，请输入正确的文件路径！', '错误');
+    errordlg('The file path is invalid. Please enter the correct file path!', 'Error');
     return;
 else
-    % 加工文件
+    % Processing file path
     strFilePath = strSecondFile(1:nxIndex(length(nxIndex)));
     handles.metricdata.PathName = strFilePath;
     handles.metricdata.SecondFileName = strSecondFile;
@@ -482,7 +482,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 检查颜色是否合法
+%%% Check if colors are legal
 function bLegal = CheckColorLegal(strColor)
 bLegal = false;
 vecColor = {'b', 'g', 'r', 'c', 'm', 'y', 'k', 'w'};
@@ -521,7 +521,7 @@ elseif 2 == nLineCount
 end
 
 
-%%% 第一个文件的直线颜色
+%%% Line color of the first file
 function edit_firstFileLine_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_firstFileLine (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -532,7 +532,7 @@ function edit_firstFileLine_Callback(hObject, eventdata, handles)
 strFirstColor = get(hObject, 'String');
 if ~CheckColorLegal(strFirstColor)
     set(hObject, 'String', handles.metricdata.firstFileColor{1});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.firstFileColor{1} = strFirstColor;
@@ -552,7 +552,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第二个文件的直线颜色
+%%% Line color of the second file
 function edit_secondFileLine_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_secondFileLine (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -563,7 +563,7 @@ function edit_secondFileLine_Callback(hObject, eventdata, handles)
 strSecondColor = get(hObject, 'String');
 if ~CheckColorLegal(strSecondColor)
     set(hObject, 'String', handles.metricdata.secondFileColor{1});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.secondFileColor{1} = strSecondColor;
@@ -583,7 +583,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第一个文件的圆弧颜色
+%%% Arc color of the first file
 function edit_firstFileArc_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_firstFileArc (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -594,7 +594,7 @@ function edit_firstFileArc_Callback(hObject, eventdata, handles)
 strFirstColor = get(hObject, 'String');
 if ~CheckColorLegal(strFirstColor)
     set(hObject, 'String', handles.metricdata.firstFileColor{2});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.firstFileColor{2} = strFirstColor;
@@ -614,7 +614,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第二个文件的圆弧颜色
+%%% Arc color of the second file
 function edit_secondFileArc_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_secondFileArc (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -625,7 +625,7 @@ function edit_secondFileArc_Callback(hObject, eventdata, handles)
 strSecondColor = get(hObject, 'String');
 if ~CheckColorLegal(strSecondColor)
     set(hObject, 'String', handles.metricdata.secondFileColor{2});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.secondFileColor{2} = strSecondColor;
@@ -645,7 +645,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第一个文件的NURBS曲线颜色
+%%% Nurbs node color for the first file
 function edit_firstFileNurbs_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_firstFileNurbs (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -656,7 +656,7 @@ function edit_firstFileNurbs_Callback(hObject, eventdata, handles)
 strFirstColor = get(hObject, 'String');
 if ~CheckColorLegal(strFirstColor)
     set(hObject, 'String', handles.metricdata.firstFileColor{3});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.firstFileColor{3} = strFirstColor;
@@ -676,7 +676,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第二个文件的NURBS曲线颜色
+%%% Nurbs node color for the second file
 function edit_secondFileNurbs_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_secondFileNurbs (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -687,7 +687,7 @@ function edit_secondFileNurbs_Callback(hObject, eventdata, handles)
 strSecondColor = get(hObject, 'String');
 if ~CheckColorLegal(strSecondColor)
     set(hObject, 'String', handles.metricdata.secondFileColor{3});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.secondFileColor{3} = strSecondColor;
@@ -707,7 +707,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第一个文件的控制点颜色
+%%% Poles color for the first file
 function edit_firstFileControlPoint_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_firstFileControlPoint (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -718,7 +718,7 @@ function edit_firstFileControlPoint_Callback(hObject, eventdata, handles)
 strFirstColor = get(hObject, 'String');
 if ~CheckColorLegal(strFirstColor)
     set(hObject, 'String', handles.metricdata.firstFileColor{4});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.firstFileColor{4} = strFirstColor;
@@ -738,7 +738,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第二个文件的控制点颜色
+%%% Poles color for the second file
 function edit_secondFileControlPoint_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_secondFileControlPoint (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -749,7 +749,7 @@ function edit_secondFileControlPoint_Callback(hObject, eventdata, handles)
 strSecondColor = get(hObject, 'String');
 if ~CheckColorLegal(strSecondColor)
     set(hObject, 'String', handles.metricdata.secondFileColor{4});
-    errordlg('图像颜色不合法，请重新输入！', '错误');
+    errordlg('Figure color is illegal, please re-enter!', 'Error');
     return;
 end
 handles.metricdata.secondFileColor{4} = strSecondColor;

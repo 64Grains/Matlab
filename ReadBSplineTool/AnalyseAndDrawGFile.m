@@ -1,78 +1,78 @@
-%% 解析刀路中的运动指令，并画图
-% 参数filePath：刀路文件路径
-% 参数nFigId：图片序号
-% 参数nColorId：颜色序号
-% 返回值figHandle：图像句柄
+%% Analyze the motion instructions in the tool path and draw pictures
+% Parameter filePath: Toolpath file path
+% Parameter nFigId: Picture number
+% Parameter nColorId: Color number
+% Return value figHandle: Figure handle
 function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
     global g_nHandleCount;
     global g_figHandle;
     g_nHandleCount = 4;
     g_figHandle = zeros(g_nHandleCount,1);
-    % 打开文件
+    % Open a file
     fidRead = fopen(filePath, 'r');
-    % 编程方式：绝对值编程G90，相对值编程G91
+    % Programming mode: absolute value programming G90, relative value programming G91
     strG90 = '';
-    % 坐标平面：XY平面G17，ZX平面G18，YZ平面G19
+    % Coordinate plane: XY plane G17, ZX plane G18, YZ plane G19
     strG17 = '';
-    % 运动G指令标识符：G0，G1，G2，G3，G6.2
+    % Motion G command identifier: G0, G1, G2, G3, G6.2
     strLastGId = '';
     strCurGId = '';
-    % 坐标值：x轴坐标，y轴坐标，z轴坐标
+    % Coordinate values: x-axis coordinate, y-axis coordinate, z-axis coordinate
     bSetStartPos = false;
     nxLastPos = ones(1,3) * Inf;
     nxCurPos = ones(1,3) * Inf;
-    % 参数：圆心I，圆心J，圆心/NURBS曲线节点K，圆弧半径/NURBS曲线权值R，NURBS曲线幂次P
+    % Parameters: circle center I, circle center J, circle center / nurbs node knot K, arc radius / nurbs node weight R, nurbs node degree P
     nxCurParam = ones(1,5) * Inf;
-    % 程序提前结束时的参数
+    % Parameters at the end of the program early
     bForceEnd = false;
-    % B样条曲线幂次、节点矢量和控制点
+    % B-spline node: degree, knot vector, poles and weights
     nurbs.nDegree = 0;
     nurbs.vecKnots = [];
     nurbs.vecPoles = [];
     nurbs.vecWeights = [];
-    % 缓存的数据点
+    % Cached data points
     global g_nMaxCachePoints;
     g_nMaxCachePoints = 10000;
     InitCellPointCache(g_nMaxCachePoints, nColorId);
-    % 曲线离散精度
+    % Curve scatter precision
     global g_nScatterPrecision;
-    % 批量读取文件，直到到达文件末尾
+    % Read files in batches until the end of the file is reached
     while ~feof(fidRead)
-        % 一次性读取多行文件
+        % Read multiple lines of file at once
         fAll = textscan(fidRead, '%s', 1000, 'Delimiter', '\n');
         fCell = fAll{1};
         nMaxLines = size(fCell,1);
         for i = 1:nMaxLines
-            % 获取并处理每一行字符串
+            % Get and process each line of string
             strOrig = fCell{i};
-            % 判断是否为空行
+            % Judge whether if it is a blank line
             if isempty(strOrig)
                 continue;
             end
-            % 判断是否包含G指令
-            if isempty(strLastGId) && isempty(strfind(strOrig, 'G'))
-                % 如果刀路中包含坐标，则G指令默认为G0
-                if ~isempty(strfind(strOrig, 'X')) || ~isempty(strfind(strOrig, 'Y')) || ~isempty(strfind(strOrig, 'Z'))
+            % Judge whether if G command is included
+            if isempty(strLastGId) && ~contains(strOrig, 'G')
+                % If the tool path contains coordinates, the G command defaults to G0
+                if contains(strOrig, 'X') || contains(strOrig, 'Y') || contains(strOrig, 'Z')
                     strCurGId = 'G0';
                 else
                     continue;
                 end
             end
-            % 判断程序是否结束
+            % Judge whether if the program is over
             bForceEnd = JudgeEndMachine(strOrig);
             if bForceEnd
                 break;
             end
-            % 读取G指令及坐标值
+            % Read G command and coordinate value
             [strG90, strG17, strCurGId, nxCurPos, nxCurParam] =...
                 AnalyseGCode(strOrig, strG90, strG17, strCurGId, nxCurPos, nxCurParam);
-            % 判断G指令类型
+            % Judge the type of G command
             if isempty(strLastGId) && isempty(strCurGId)
                 continue;
             elseif isempty(strCurGId)
                 strCurGId = strLastGId;
             end
-            % 将无效坐标转化为0
+            % Convert invalid coordinates to 0
             if isinf(nxCurPos(1)) && isinf(nxCurPos(2)) && isinf(nxCurPos(3)) && isinf(nxCurParam(3))
                 if ~isempty(strCurGId)
                     strLastGId = strCurGId;
@@ -87,9 +87,9 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
                     bSetStartPos = true;
                 end
             end
-            % 检查上一指令是否是B样条曲线
+            % Check if the previous command is a B-spline node
             if ~strcmp(strLastGId, strCurGId) && strcmp(strLastGId, 'G6.2')
-                % 离散B样条曲线上的点
+                % Scatter nurbs node
                 nurbs.vecPoles = nurbs.vecPoles(1:size(nurbs.vecPoles,1)-nurbs.nDegree-1,:);
                 vecPoints = ScatterNurbs(nurbs, g_nScatterPrecision);
                 StoreCellPointCache(vecPoints, 3, nFigId);
@@ -99,18 +99,18 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
                 nurbs.vecPoles = [];
                 nurbs.vecWeights = [];
             end
-            % 分析坐标值
+            % Analyze coordinate values
             if strcmp(strCurGId, 'G1')
                 StoreCellPointCache([nxLastPos; nxCurPos], 1, nFigId);
             elseif strcmp(strCurGId, 'G2') || strcmp(strCurGId, 'G3')
                 vecPoints = ScatterArc(strG17, strCurGId, nxLastPos, nxCurPos, nxCurParam, g_nScatterPrecision);
                 StoreCellPointCache(vecPoints, 2, nFigId);
             elseif strcmp(strCurGId, 'G6.2')
-                % B样条曲线的幂次
+                % The degree of nurbs node
                 if ~isinf(nxCurParam(5))
-                    % 检查是否有两个相连的B样条曲线指令
+                    % Check if there are two connected B-spline nodes
                     if strcmp(strLastGId, 'G6.2')
-                        % 离散B样条曲线上的点
+                        % Scatter nurbs node
                         nurbs.vecPoles = nurbs.vecPoles(1:size(nurbs.vecPoles,1)-nurbs.nDegree-1,:);
                         vecPoints = ScatterNurbs(nurbs, g_nScatterPrecision);
                         StoreCellPointCache(vecPoints, 3, nFigId);
@@ -121,14 +121,14 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
                     end
                     nurbs.nDegree = nxCurParam(5);
                 end
-                % B样条曲线的节点矢量
+                % The knot vector of nurbs node
                 if ~isinf(nxCurParam(3))
                     nurbs.vecKnots = [nurbs.vecKnots; nxCurParam(3)];
                 end
-                % B样条曲线的控制点
+                % The poles of nurbs node
                 if 0 == size(nurbs.vecPoles,1)
                     nurbs.vecPoles = nxCurPos;
-                    % 控制点的权值
+                    % The weights of poles
                     if ~isinf(nxCurParam(4))
                         nurbs.vecWeights = nxCurParam(4);
                     end
@@ -140,13 +140,13 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
                 end
             else
                 if ~strcmp(strCurGId, 'G0')
-                    error('错误的G指令：%s', strCurGId);
+                    error('Wrong G command: %s\n', strCurGId);
                 end
             end
-            % 记录上次的参数值
+            % Record last parameter value
             strLastGId = strCurGId;
             nxLastPos = nxCurPos;
-            % 参数复位
+            % Parameters reset
             nxCurPos = ones(1,3) * Inf;
             nxCurParam = ones(1,5) * Inf;
         end
@@ -154,39 +154,39 @@ function figHandle = AnalyseAndDrawGFile(filePath, nFigId, nColorId)
             break;
         end
     end
-    % 最后一段为B样条曲线
+    % The last paragraph is a B-spline node
     if strcmp(strLastGId, 'G6.2')
-        % 离散B样条曲线上的点
+        % Scatter nurbs node
         nurbs.vecPoles = nurbs.vecPoles(1:size(nurbs.vecPoles,1)-nurbs.nDegree-1,:);
         vecPoints = ScatterNurbs(nurbs, g_nScatterPrecision);
         StoreCellPointCache(vecPoints, 3, nFigId);
         StoreCellPointCache(nurbs.vecPoles, 4, nFigId);
     end
-    % 刷新缓存
+    % Flush cache
     for i = 1:g_nHandleCount
         FlushCellPointCache(i, nFigId);
     end
-    % 关闭文件
+    % Close file
     fclose(fidRead);
     figHandle = g_figHandle;
 end
 
-%% 初始化缓存数据点
+%%% Initialize cache data points
 function InitCellPointCache(nMaxSize, nColorId)
-    % 参数检查
+    % Check parameters
     if nColorId ~= 1 && nColorId ~= 2
-        error('错误的参数：颜色序号%f\n', nColorId);
+        error('Wrong parameter: color number is %f\n', nColorId);
     end
     global g_vecColor;
     global g_nHandleCount;
     global g_cellPointCache;
     g_cellPointCache = cell(g_nHandleCount,1);
     for i = 1:g_nHandleCount
-        % 数据点
+        % Data point
         g_cellPointCache{i}.points = zeros(nMaxSize,3);
-        % 起始索引
+        % Start index
         g_cellPointCache{i}.index = 0;
-        % 图像颜色
+        % Figure color
         g_cellPointCache{i}.color = g_vecColor{nColorId}{i};
     end
     global g_nxMaxRange;
@@ -197,17 +197,17 @@ function InitCellPointCache(nMaxSize, nColorId)
     g_bFirstPoint = 0;
 end
 
-%% 存储缓存数据点
+%%% Store cache data points
 function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
-    % 参数检查
+    % Check parameters
     if size(vecPoints,1) < 1
-        error('错误的参数：数据点数为%f\n', size(vecPoints,1));
+        error('Wrong parameter: number of data points is %f\n', size(vecPoints,1));
     end
     global g_nHandleCount;
     if nHandleIndex < 1 || nHandleIndex > g_nHandleCount
-        error('错误的参数：句柄索引为%f\n', nHandleIndex);
+        error('Wrong parameter: handle index is %f\n', nHandleIndex);
     end
-    % 如果颜色一致，则修改句柄索引值
+    % If the colors are consistent, modify the handle index value
     global g_cellPointCache;
     for i = 1:g_nHandleCount-1
         if strcmp(g_cellPointCache{i}.color, g_cellPointCache{nHandleIndex}.color)
@@ -215,15 +215,15 @@ function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
             break;
         end
     end
-    % 存储数据点
+    % Store data points
     nPointIndex = g_cellPointCache{nHandleIndex}.index;
     if nPointIndex > 0 && norm(g_cellPointCache{nHandleIndex}.points(nPointIndex,:) - vecPoints(1,:)) > 0.001
-        % 当前数据点与缓存的数据点不是首尾相连的
+        % The current data point and the cached data point are not connected end to end
         vecNewPoints = g_cellPointCache{nHandleIndex}.points(1:nPointIndex,:);
         PlotFigureByPlane(vecNewPoints, nHandleIndex, nFigId, g_cellPointCache{nHandleIndex}.color, 0);
         g_cellPointCache{nHandleIndex}.index = 0;
     end
-    % 检查缓存是否装得下
+    % Check if the cache can fit
     global g_nMaxCachePoints;
     nPointIndex = g_cellPointCache{nHandleIndex}.index;
     if nPointIndex + size(vecPoints,1) >= g_nMaxCachePoints
@@ -232,7 +232,7 @@ function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
         g_cellPointCache{nHandleIndex}.index = 0;
         return;
     end
-    % 缓存数据点
+    % Cache data points
     if nPointIndex == 0
         g_cellPointCache{nHandleIndex}.points = vecPoints;
         g_cellPointCache{nHandleIndex}.index = size(vecPoints,1);
@@ -242,12 +242,12 @@ function StoreCellPointCache(vecPoints, nHandleIndex, nFigId)
     end
 end
 
-%% 刷新缓存数据点
+%%% Flush cache data points
 function FlushCellPointCache(nHandleIndex, nFigId)
-    % 参数检查
+    % Check parameters
     global g_nHandleCount;
     if nHandleIndex < 1 || nHandleIndex > g_nHandleCount
-        error('错误的参数：句柄索引为%f\n', nHandleIndex);
+        error('Wrong parameter: handle index is %f\n', nHandleIndex);
     end
     global g_cellPointCache;
     nPointIndex = g_cellPointCache{nHandleIndex}.index;
@@ -259,12 +259,12 @@ function FlushCellPointCache(nHandleIndex, nFigId)
     g_cellPointCache{nHandleIndex}.index = 0;
 end
 
-%% 判断程序是否结束加工
-% 参数strOrig：待解析的字符串
-% 返回值bForceEnd：是否停止加工，true为停止，false为不停止
+%%% Judge whether the program ends processing
+% Parameter strOrig: String to parse
+% Return value bForceEnd: Whether to stop processing, true to stop, false to not stop
 function bForceEnd = JudgeEndMachine(strOrig)
     bForceEnd = false;
-    % 如果包含M2或M30，则程序结束
+    % If M2 or M30 is included, the program ends
     nIndex = strfind(strOrig, 'M');
     if isempty(nIndex)
         nIndex = strfind(strOrig, 'm');
@@ -272,7 +272,7 @@ function bForceEnd = JudgeEndMachine(strOrig)
             return;
         end
     end
-    % 默认第1个字符为标识符
+    % The first character is the identifier by default
     nResult = textscan(strOrig(nIndex:end), '%c%f', 1);
     if ~isempty(nResult{2})
         nValue = nResult{2};
@@ -280,27 +280,27 @@ function bForceEnd = JudgeEndMachine(strOrig)
             bForceEnd = true;
         end
     else
-        error('索引值不存在：字符串为%s，索引为%d', strOrig, nIndex);
+        error('Index value does not exist: string is %s, index is %d\n', strOrig, nIndex);
     end
 end
 
-%% 获取绝对坐标值
-% 参数strG90：编程方式，G90为绝对坐标编程(默认值)，G91为相对坐标编程
-% 参数nxLastPos：上一插补点的绝对坐标
-% 参数nxCurPos：当前插补点的(绝对/相对)坐标
-% 返回值nxCurPosOut：根据编程方式获取当前插补点的绝对坐标
+%%% Get absolute coordinate
+% Parameter strG90: Programming mode, G90 is absolute coordinate programming (default value), G91 is relative coordinate programming
+% Parameter nxLastPos: Absolute coordinates of the previous interpolation point
+% Parameter nxCurPos: Absolute or relative coordinates of the current interpolation point
+% Return value nxCurPosOut: Get the absolute coordinates of the current interpolation point according to the programming mode
 function nxCurPosOut = GetAbsoluteAxis(strG90, nxLastPos, nxCurPos)
-    % 参数检查
+    % Check parameters
     if ~isempty(strG90) && strcmp(strG90, 'G90') && strcmp(strG90, 'G91')
-        error('错误的编程方式：%s', strG90);
+        error('Wrong programming: %s\n', strG90);
     end
     if isinf(nxLastPos(1)) && isinf(nxLastPos(2)) && isinf(nxLastPos(3))
         nxLastPos = zeros(1,3);
     end
     if isinf(nxLastPos(1)) || isinf(nxLastPos(2)) || isinf(nxLastPos(3))
-        error('错误的坐标值：X=%f,Y=%f,Z=%f', nxLastPos(1), nxLastPos(2), nxLastPos(3));
+        error('Wrong coordinate: X = %f, Y = %f, Z = %f\n', nxLastPos(1), nxLastPos(2), nxLastPos(3));
     end
-    % 绝对坐标
+    % Absolute coordinate
     nxCurPosOut = nxLastPos;
     for i = 1:3
         if ~isinf(nxCurPos(i)) && strcmp(strG90, 'G91')
@@ -311,29 +311,29 @@ function nxCurPosOut = GetAbsoluteAxis(strG90, nxLastPos, nxCurPos)
     end
 end
 
-%% 解析G指令及坐标值
-% 参数strOrig：待解析的字符串
-% 参数strG90：编程方式
-% 参数strG17：坐标平面
-% 参数strCurGId：G指令标识符
-% 参数nxCurPos：坐标值
-% 参数nxCurParam：圆弧/B样条参数
-% 返回值：其余参数与输入参数类似
+%%% Analyze G commands and coordinate values
+% Parameter strOrig: String to parse
+% Parameter strG90: Programming style
+% Parameter strG17: Coordinate plane
+% Parameter strCurGId: G command identifier
+% Parameter nxCurPos: Coordinate value
+% Parameter nxCurParam: Arc / B-spline parameters
+% Return value: The outout parameters are similar to the input parameters
 function [strG90Out, strG17Out, strCurGIdOut, nxCurPosOut, nxCurParamOut]...
     = AnalyseGCode(strOrig, strG90, strG17, strCurGId, nxCurPos, nxCurParam)
-    % 默认值
+    % Defaults
     strG90Out = strG90;
     strG17Out = strG17;
     strCurGIdOut = strCurGId;
     nxCurPosOut = nxCurPos;
     nxCurParamOut = nxCurParam;
-    % 解析字符串中的值
+    % Parsing values in the string
     vecResult = textscan(strOrig, '%c%f');
     vecFlags = vecResult{1};
     vecValues = vecResult{2};
     for i = 1:length(vecFlags)
         if strcmp(vecFlags(i), 'G') || strcmp(vecFlags(i), 'g')
-            % 分类处理G指令标识符
+            % Classification processing G instruction identifier
             switch vecValues(i)
                 case 1
                     strCurGIdOut = 'G1';
@@ -376,12 +376,12 @@ function [strG90Out, strG17Out, strCurGIdOut, nxCurPosOut, nxCurParamOut]...
     end
 end
 
-%% 根据坐标视图进行画图
+%%% Drawing based on coordinate view
 function PlotFigureByPlane(vecFitPoint, nHandleIndex, nFigId, strColor, bFlush)
-    % 参数检查
+    % Check parameters
     global g_nHandleCount;
     if nHandleIndex < 1 || nHandleIndex > g_nHandleCount
-        error('错误的参数：句柄索引为%f\n', nHandleIndex);
+        error('Wrong parameter: handle index is %f\n', nHandleIndex);
     end
     global g_bDrawControlPoint;
     if nHandleIndex == g_nHandleCount
@@ -389,7 +389,7 @@ function PlotFigureByPlane(vecFitPoint, nHandleIndex, nFigId, strColor, bFlush)
             return;
         end
     end
-    % 记录最大最小范围值
+    % Record maximum and minimum range values
     global g_nxMaxRange;
     global g_nxMinRange;
     global g_bFirstPoint;
@@ -409,39 +409,40 @@ function PlotFigureByPlane(vecFitPoint, nHandleIndex, nFigId, strColor, bFlush)
         nSpace = max([abs(g_nxMaxRange(1) - g_nxMinRange(1)), abs(g_nxMaxRange(2) - g_nxMinRange(2)),...
             abs(g_nxMaxRange(3) - g_nxMinRange(3))]) * 0.05;
     end
-    % 画图
+    % Drawing
     global g_figHandle;
     global g_strPlane;
     figure(nFigId);
     hold on;
     switch g_strPlane
-        case '三维视图'
+        case '3D View'
             if bFlush
                 plot3(g_nxMaxRange(:,1)+nSpace, g_nxMaxRange(:,2)+nSpace, g_nxMaxRange(:,3)+nSpace, 'w');
                 plot3(g_nxMinRange(:,1)-nSpace, g_nxMinRange(:,2)-nSpace, g_nxMinRange(:,3)-nSpace, 'w');
             end
             g_figHandle(nHandleIndex) = plot3(vecFitPoint(:,1), vecFitPoint(:,2), vecFitPoint(:,3), strColor);
             view([1 1 1]);
-        case 'X-Y平面'
+        case 'X-Y Plane'
             if bFlush
                 plot(g_nxMaxRange(:,1)+nSpace, g_nxMaxRange(:,2)+nSpace, 'w');
                 plot(g_nxMinRange(:,1)-nSpace, g_nxMinRange(:,2)-nSpace, 'w');
             end
             g_figHandle(nHandleIndex) = plot(vecFitPoint(:,1), vecFitPoint(:,2), strColor);
-        case 'Y-Z平面'
+        case 'Y-Z Plane'
             if bFlush
                 plot(g_nxMaxRange(:,2)+nSpace, g_nxMaxRange(:,3)+nSpace, 'w');
                 plot(g_nxMinRange(:,2)-nSpace, g_nxMinRange(:,3)-nSpace, 'w');
             end
             g_figHandle(nHandleIndex) = plot(vecFitPoint(:,2), vecFitPoint(:,3), strColor);
-        case 'Z-X平面'
+        case 'Z-X Plane'
             if bFlush
                 plot(g_nxMaxRange(:,3)+nSpace, g_nxMaxRange(:,1)+nSpace, 'w');
                 plot(g_nxMinRange(:,3)-nSpace, g_nxMinRange(:,1)-nSpace, 'w');
             end
             g_figHandle(nHandleIndex) = plot(vecFitPoint(:,3), vecFitPoint(:,1), strColor);
         otherwise
-            error('错误的视图：%s', g_strPlane);
+            error('Wrong view: %s\n', g_strPlane);
     end
+    grid on;
     axis equal;
 end

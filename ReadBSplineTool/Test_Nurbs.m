@@ -1,45 +1,47 @@
-%% test
-% NURBS曲线信息如下：
-%   nurbs.nDegree ------ 次数
-%   nurbs.vecKnots ----- 节点矢量
-%   nurbs.vecPoles ----- 控制点
-%   nurbs.vecWeights --- 控制点对应的权值点
+%% test for nurbs node
+% The nurbs node information is as follows:
+%   nurbs.nDegree ------ The degree of nurbs node
+%   nurbs.vecKnots ----- The knot vector of nurbs node
+%   nurbs.vecPoles ----- The poles of nurbs node
+%   nurbs.vecWeights --- The weights of nurbs node
 function Test_Nurbs()
-    clear all;clc;close all;
-    % 读取NURBS曲线
-    nurbs = ReadNurbsFromFile('test\circle.nc');
+    clc; close all;
+    % Read nurbs node from a file
+    nurbs = ReadNurbsFromFile('TestData\circle.nc');
     if isempty(nurbs)
         return;
     end
-    % 测试离散方式
-    Test_NurbsScatter(nurbs);
-    % 测试导矢
-    Test_NurbsDeriv(nurbs);
+    % Test scatter for nurbs node
+    nCount = 200;
+    nDeflection = 1e-2;
+    Test_NurbsScatter(nurbs, nCount, nDeflection);
+    % Test derivative for nurbs node
+    Test_NurbsDeriv(nurbs, nCount);
 end
 
-%%% 读取NURBS曲线
+%%% Read nurbs node from a file
 function nurbs = ReadNurbsFromFile(strFilePath)
     nurbs = [];
-    % 检查文件是否存在
+    % Check if file exists
     bFileExist = exist(strFilePath, 'file');
     if 0 == bFileExist || 7 == bFileExist
-        fprintf('文件(%s)不存在!\n', strFilePath);
+        fprintf('File (%s) not exists!\n', strFilePath);
         return;
     end
-    % NURBS曲线信息
+    % Nurbs node information
     nurbs.nDegree = 0;
     nurbs.vecKnots = [];
     nurbs.vecPoles = [];
     nurbs.vecWeights = [];
-    % 读取文件
+    % Read file
     fidRead = fopen(strFilePath, 'r');
     while ~feof(fidRead)
-        % 一次性读取多行
+        % Read multiple rows at once
         fAll = textscan(fidRead, '%s', 1000, 'Delimiter', '\n');
         fCell = fAll{1};
         nMaxLines = size(fCell,1);
         for i = 1:nMaxLines
-            % 获取并处理每一行字符串
+            % Get and process each line of string
             strOrig = fCell{i};
             if isempty(strOrig)
                 continue;
@@ -48,17 +50,17 @@ function nurbs = ReadNurbsFromFile(strFilePath)
         end
     end
     fclose(fidRead);
-    % 检查NURBS曲线是否合法
+    % Check if nurbs node is legal
     CheckNurbs(nurbs);
 end
 
-%%% 获取NURBS曲线标识符的值
+%%% Get the value of the nurbs node identifier
 function nurbsNew = GetNurbsFlags(nurbs, strOrig)
     nurbsNew = nurbs;
-    % 坐标值
+    % Coordinate value
     nxPole = [0, 0, 0];
     bHasPole = false;
-    % 解析标识符及对应值
+    % Parse identifiers and corresponding values
     vecResult = textscan(strOrig, '%c%f');
     vecFlags = vecResult{1};
     vecValues = vecResult{2};
@@ -66,11 +68,11 @@ function nurbsNew = GetNurbsFlags(nurbs, strOrig)
         switch vecFlags(i)
             case 'G'
                 if vecValues(i) ~= 6.2
-                    error('错误的参数：G代码标识为%f\n', vecValues(i));
+                    error('Wrong parameter: G code identified is %f\n', vecValues(i));
                 end
             case 'P'
                 if nurbsNew.nDegree ~= 0
-                    error('只支持单段NURBS曲线的解析!\n');
+                    error('Only supports the analysis of single-segment nurbs node!\n');
                 end
                 nurbsNew.nDegree = vecValues(i);
             case 'K'
@@ -87,7 +89,7 @@ function nurbsNew = GetNurbsFlags(nurbs, strOrig)
             case 'R'
                 nurbsNew.vecWeights = [nurbsNew.vecWeights; vecValues(i)];
             otherwise
-                error('错误的标识符:%c\n', vecFlags(i));
+                error('Wrong identifier : %c\n', vecFlags(i));
         end
     end
     if bHasPole
@@ -95,10 +97,9 @@ function nurbsNew = GetNurbsFlags(nurbs, strOrig)
     end
 end
 
-%%% 测试离散方式
-function Test_NurbsScatter(nurbs)
-    % 计算曲线上的点
-    nCount = 200;
+%%% Test scatter for nurbs node
+function Test_NurbsScatter(nurbs, nCount, nDeflection)
+    % Calculate points on the curve
     vecPointsByFormula = zeros(nCount+1,3);
     nStartKnot = nurbs.vecKnots(nurbs.nDegree+1);
     nEndKnot = nurbs.vecKnots(length(nurbs.vecKnots)-nurbs.nDegree);
@@ -110,9 +111,8 @@ function Test_NurbsScatter(nurbs)
             [vecPointsByFormula(i+1,:), ~, ~] = GetNurbsDeriv(nurbs, nKnot);
         end
     end
-    nDeflection = 1e-2;
     vecPointsByDeflection = ScatterNurbs(nurbs, nDeflection);
-    % 画图比较
+    % Drawing comparison
     figure();
     hold on;
     if isequal(vecPointsByFormula(:,3), zeros(size(vecPointsByFormula,1),1))
@@ -125,15 +125,14 @@ function Test_NurbsScatter(nurbs)
         plot3(nurbs.vecPoles(:,1), nurbs.vecPoles(:,2), nurbs.vecPoles(:,3), '*-r');
         view([1 1 1]);
     end
-    legend('按节点矢量离散作图', '按弓高误差离散作图', 'NURBS曲线控制点');
-    title('轨迹图');
+    legend('Scatting by uniformly sampled node vector', 'Scatting by bow height error', 'Poles of nurbs node');
+    title('Track figure');
     axis equal;
 end
 
-%%% 测试导矢
-function Test_NurbsDeriv(nurbs)
-    % 计算导矢数值
-    nCount = 200;
+%%% Test derivative for nurbs node
+function Test_NurbsDeriv(nurbs, nCount)
+    % Calculate derivative value
     vecNewDeriv = zeros(nCount+1,9);
     nStartKnot = nurbs.vecKnots(nurbs.nDegree+1);
     nEndKnot = nurbs.vecKnots(length(nurbs.vecKnots)-nurbs.nDegree);
@@ -149,8 +148,8 @@ function Test_NurbsDeriv(nurbs)
     vecOrigDeriv = vecNewDeriv;
     vecOrigDeriv(2:end,4:6) = diff(vecOrigDeriv(:,1:3)) / nStepKnot;
     vecOrigDeriv(3:end,7:9) = diff(vecOrigDeriv(2:end,4:6)) / nStepKnot;
-    % 画图比较
-    vecTitles = {'一阶导矢图', '二阶导矢图'};
+    % Drawing comparison
+    vecTitles = {'First derivative figure', 'Second derivative figure'};
     for i = 2:min(nurbs.nDegree+1,3)
         figure();
         hold on;
@@ -162,11 +161,11 @@ function Test_NurbsDeriv(nurbs)
             plot3(vecNewDeriv(:,i*3-2), vecNewDeriv(:,i*3-1), vecNewDeriv(:,i*3), '.-g');
             view([1 1 1]);
         end
-        legend('微分法作图', '计算法作图');
+        legend('Differential method', 'Calculation method');
         title(vecTitles{i-1});
         axis equal;
     end
-    % 计算曲率
+    % Calculating curvature
     vecNewCurvature = zeros(size(vecNewDeriv,1),1);
     vecOldCurvature = zeros(size(vecOrigDeriv,1),1);
     for i = 1:length(vecNewCurvature)
@@ -183,11 +182,11 @@ function Test_NurbsDeriv(nurbs)
         nxNumerator(3) = vecOrigDeriv(i,4) * vecOrigDeriv(i,8) - vecOrigDeriv(i,7) * vecOrigDeriv(i,5);
         vecOldCurvature(i) = norm(nxNumerator) / (norm(vecOrigDeriv(i,4:6)))^3;
     end
-    % 画图
+    % Drawing
     figure();
     hold on;
     plot(1:length(vecOldCurvature), vecOldCurvature, '.-b');
     plot(1:length(vecNewCurvature), vecNewCurvature, '.-g');
-    legend('微分法作图', '计算法作图');
-    title('曲率图');
+    legend('Differential method', 'Calculation method');
+    title('Curvature figure');
 end

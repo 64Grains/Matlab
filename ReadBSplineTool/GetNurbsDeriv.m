@@ -1,51 +1,50 @@
-%% 计算NURBS曲线指定节点处的导矢
-% NURBS曲线信息如下：
-%   nurbs.nDegree ------ 次数
-%   nurbs.vecKnots ----- 节点矢量
-%   nurbs.vecPoles ----- 控制点
-%   nurbs.vecWeights --- 控制点对应的权值点
-%   nurbs.bRational ---- 是否为有理B样条曲线
+%% Calculate the derivative at the specified knot of nurbs node
+% The nurbs node information is as follows:
+%   nurbs.nDegree ------ The degree of nurbs node
+%   nurbs.vecKnots ----- The knot vector of nurbs node
+%   nurbs.vecPoles ----- The poles of nurbs node
+%   nurbs.vecWeights --- The weights of nurbs node
+%   nurbs.bRational ---- Whether it is a rational B-spline node
 function [nxDeriv0, nxDeriv1, nxDeriv2] = GetNurbsDeriv(nurbs, nKnot)
-    % 检查参数
+    % Check parameters
     nurbs = CheckNurbs(nurbs);
-    % 分类处理
+    % Classification processing
     if nurbs.bRational
-        % 有理B样条曲线：利用莱布尼茨公式求取
-        % 分母的零阶、一阶、二阶导矢
+        % Rational B-spline node: Using Leibniz's formula
+        % Zero-order, first-order, and second-order derivatives of the denominator
         [nDenominatorDeriv0, nDenominatorDeriv1, nDenominatorDeriv2] = GetBSplineDeriv(nurbs, nurbs.vecWeights, nKnot);
-        % 分子的零阶、一阶、二阶导矢
+        % Zero-order, first-order, and second-order derivatives of the numerator
         vecWeightedPoles = nurbs.vecPoles;
         for i = 1:size(nurbs.vecPoles,1)
             vecWeightedPoles(i,:) = nurbs.vecPoles(i,:) * nurbs.vecWeights(i);
         end
         [nxNumeratorDeriv0, nxNumeratorDeriv1, nxNumeratorDeriv2] = GetBSplineDeriv(nurbs, vecWeightedPoles, nKnot);
-        % 零阶导矢（点的坐标）
+        % Zero-order derivative (point coordinate)
         nxDeriv0 = nxNumeratorDeriv0 / nDenominatorDeriv0;
-        % 一阶导矢
+        % First-order derivative
         nxDeriv1 = (nxNumeratorDeriv1 * nDenominatorDeriv0 - nxNumeratorDeriv0 * nDenominatorDeriv1)...
             / (nDenominatorDeriv0 * nDenominatorDeriv0);
-        % 二阶导矢
+        % Second-order derivative
         nxDeriv2 = (nxNumeratorDeriv2 * nDenominatorDeriv0 - 2 * nxDeriv1 * nDenominatorDeriv0 * nDenominatorDeriv1...
             - nxNumeratorDeriv0 * nDenominatorDeriv2) / (nDenominatorDeriv0 * nDenominatorDeriv0);
     else
-        %  非有理B样条曲线：利用De-Boor递推公式求解
+        % Non-rational B-spline node: Solving by De-Boor recursion formula
         [nxDeriv0, nxDeriv1, nxDeriv2] = GetBSplineDeriv(nurbs, nurbs.vecPoles, nKnot);
     end
 end
 
-%% 计算非有理B样条曲线指定节点处的导矢
+%%% Calculate the derivatives at a specified knot of a non-rational B-spline node
 function [nxDeriv0, nxDeriv1, nxDeriv2] = GetBSplineDeriv(nurbs, vecWeightedPoles, nKnot)
-    % 获取有效的控制点
+    % Get valid poles
     [vecPoles, nKnotIndex] = GetValidPoles(nurbs, vecWeightedPoles, nKnot);
-    % 利用De-Boor递推算法求解
+    % Solve using De-Boor recursive algorithm
     vecTempPoles = vecPoles;
-    
     deBoorInfo.nKnot = nKnot;
     deBoorInfo.nKnotIndex = nKnotIndex;
     deBoorInfo.nStartIndex = 1;
     deBoorInfo.nEndIndex = nurbs.nDegree - 2;
     [vecPoles, vecTempPoles] = GetIteratePole(nurbs, deBoorInfo, vecPoles, vecTempPoles);
-    % 二阶导矢
+    % Second-order derivative
     nxDeriv2 = nurbs.nDegree * (nurbs.nDegree - 1) / (nurbs.vecKnots(nKnotIndex+1) - nurbs.vecKnots(nKnotIndex))...
         * ((vecPoles(nurbs.nDegree+1, :) - vecPoles(nurbs.nDegree, :)) / (nurbs.vecKnots(nKnotIndex+2)...
         - nurbs.vecKnots(nKnotIndex)) - (vecPoles(nurbs.nDegree, :) - vecPoles(nurbs.nDegree-1, :))...
@@ -54,30 +53,30 @@ function [nxDeriv0, nxDeriv1, nxDeriv2] = GetBSplineDeriv(nurbs, vecWeightedPole
     deBoorInfo.nStartIndex = deBoorInfo.nEndIndex + 1;
     deBoorInfo.nEndIndex = deBoorInfo.nStartIndex;
     [vecPoles, vecTempPoles] = GetIteratePole(nurbs, deBoorInfo, vecPoles, vecTempPoles);
-    % 一阶导矢
+    % First-order derivative
     nxDeriv1 = nurbs.nDegree / (nurbs.vecKnots(nKnotIndex+1) - nurbs.vecKnots(nKnotIndex)) * (vecPoles(nurbs.nDegree+1,:)...
         - vecPoles(nurbs.nDegree,:));
     
     deBoorInfo.nStartIndex = deBoorInfo.nEndIndex + 1;
     deBoorInfo.nEndIndex = deBoorInfo.nStartIndex;
     [vecPoles, ~] = GetIteratePole(nurbs, deBoorInfo, vecPoles, vecTempPoles);
-    % 零阶导矢（点的坐标）
+    % Zero-order derivative (point coordinate)
     nxDeriv0 = vecPoles(nurbs.nDegree+1, :);
 end
 
-%% 获取有效的控制点
+%%% Get valid poles
 function [vecValidPoles, nKnotIndex] = GetValidPoles(nurbs, vecOrigPoles, nKnot)
-    % 查询节点在节点区间的下标
+    % Query the subscript of the knot in the knot interval
     nKnotIndex = FindSpan(nurbs.nDegree, nurbs.vecKnots, nKnot);
-    % 非零B样条基函数对应的控制点
+    % Poles for non-zero B-spline basis functions
     vecValidPoles = vecOrigPoles(nKnotIndex-nurbs.nDegree:nKnotIndex,:);
 end
 
-%% 获取迭代控制点
+%%% Get iterative poles
 function [vecPolesNew, vecTempPolesNew] = GetIteratePole(nurbs, deBoorInfo, vecPoles, vecTempPoles)
     vecPolesNew = vecPoles;
     vecTempPolesNew = vecTempPoles;
-    % De-Boor递推算法计算迭代控制点
+    % De-Boor recursive algorithm calculates iterative poles
     for i = deBoorInfo.nStartIndex:deBoorInfo.nEndIndex
         for j = i:nurbs.nDegree
             nTempIndex = deBoorInfo.nKnotIndex - nurbs.nDegree + j;

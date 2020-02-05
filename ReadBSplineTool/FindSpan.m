@@ -1,6 +1,6 @@
-%% 查询节点所在节点区间的下标
+%% Query the subscript of the knot in the knot interval
 function nIndex = FindSpan(nDegree, vecKnots, nKnot)
-    % 参数检查
+    % Check parameters
     global g_nCompareError;
     nLength = length(vecKnots);
     if nKnot < vecKnots(nDegree + 1) || nKnot > vecKnots(nLength - nDegree)
@@ -9,17 +9,18 @@ function nIndex = FindSpan(nDegree, vecKnots, nKnot)
         elseif abs(nKnot - vecKnots(nLength - nDegree)) < g_nCompareError
             nKnot = vecKnots(nLength - nDegree);
         else
-            error('节点值u=%f超出节点矢量的范围：下界%f，上界%f', nKnot, vecKnots(nDegree + 1), vecKnots(nLength - nDegree));
+            error('Knot value u=%f exceeds the range of knot vector: lower bound %f, upper bound %f\n',...
+                nKnot, vecKnots(nDegree + 1), vecKnots(nLength - nDegree));
         end
     end
-    % 特殊情况
+    % Special case
     if nKnot == vecKnots(nLength - nDegree)
         nIndex = nLength - nDegree - 1;
         while vecKnots(nIndex) == vecKnots(nLength - nDegree)
             nIndex = nIndex - 1;
         end
     else
-        % 二分搜索
+        % Binary search
         nLow = nDegree + 1;
         nHigh = nLength - nDegree;
         nMid = floor((nLow + nHigh) / 2);

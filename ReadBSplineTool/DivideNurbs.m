@@ -1,14 +1,15 @@
-%% 将NURBS曲线分割为没有重节点的NURBS曲线段
-% NURBS曲线信息如下：
-%   nurbs.nDegree ------ 次数
-%   nurbs.vecKnots ----- 节点矢量
-%   nurbs.vecPoles ----- 控制点
-%   nurbs.vecWeights --- 控制点对应的权值点
-%   nurbs.bRational ---- 是否为有理B样条曲线
+%% Divide nurbs node into nurbs node segments without heavy knots
+% The nurbs node information is as follows:
+%   nurbs.nDegree ------ The degree of nurbs node
+%   nurbs.vecKnots ----- The knot vector of nurbs node
+%   nurbs.vecPoles ----- The poles of nurbs node
+%   nurbs.vecWeights --- The weights of nurbs node
+%   nurbs.bRational ---- Whether it is a rational B-spline node
 function vecNurbs = DivideNurbs(nurbs)
-    % 检查参数
+    % Check parameters
     nurbs = CheckNurbs(nurbs);
-    % 在内重节点处插入节点，使得重节点的重复度为nurbs.nDegree+1，然后将NURBS曲线分割为没有重节点的NURBS曲线段
+    % Insert the knot at the inner heavy knot so that the repeat degree of the heavy knot is nurbs.nDegree + 1,
+    % and then divide the nurbs node into nurbs node segments without heavy knots
     global g_nCompareError;
     nStartIndex = 1;
     while true
@@ -24,7 +25,7 @@ function vecNurbs = DivideNurbs(nurbs)
         end
         nEndIndex = nEndIndex - 1;
     end
-    % 统计需要插入的节点值
+    % Count the knot values that need to be inserted
     vecInsertKnot = nurbs.vecKnots;
     nIndex = 0;
     nFlagKnot = nurbs.vecKnots(nStartIndex);
@@ -52,24 +53,24 @@ function vecNurbs = DivideNurbs(nurbs)
         end
     end
     vecInsertKnot = vecInsertKnot(1:nIndex);
-    % 节点细化
+    % Knot refinement
     nurbs = RefineNurbs(nurbs, vecInsertKnot);
-    % 将NURBS曲线进行划分
+    % Divide the nurbs node
     vecNurbs = SectionNurbs(nurbs);
 end
 
-%%% NURBS曲线：节点细化
+%%% Nurbs node: knot refinement
 function nurbsNew = RefineNurbs(nurbs, vecInsertKnot)
     if isempty(vecInsertKnot)
         nurbsNew = nurbs;
         return;
     end
-    % 非有理B样条曲线
+    % Non-rational B-spline node
     if ~nurbs.bRational
         nurbsNew = RefineBSpline(nurbs, vecInsertKnot);
         return;
     end
-    % 有理B样条曲线：将坐标转化为高维的齐次坐标
+    % Rational B-spline node: transform coordinates into high-dimensional homogeneous coordinates
     vecTempPoles = nurbs.vecPoles;
     [nRow, nColumn] = size(vecTempPoles);
     nurbs.vecPoles = zeros(nRow, nColumn+1);
@@ -78,7 +79,7 @@ function nurbsNew = RefineNurbs(nurbs, vecInsertKnot)
         nurbs.vecPoles(i,nColumn+1) = nurbs.vecWeights(i);
     end
     nurbsNew = RefineBSpline(nurbs, vecInsertKnot);
-    % 转化齐次坐标
+    % Transform homogeneous coordinates
     vecTempPoles = nurbsNew.vecPoles;
     [nRow, nColumn] = size(vecTempPoles);
     nurbsNew.vecPoles = zeros(nRow, nColumn-1);
@@ -88,25 +89,19 @@ function nurbsNew = RefineNurbs(nurbs, vecInsertKnot)
     nurbsNew.vecWeights = vecTempPoles(:,nColumn);
 end
 
-%%% BSpline曲线：节点细化
-% NURBS曲线信息如下：
-%   nurbs.nDegree ------ 次数
-%   nurbs.vecKnots ----- 节点矢量
-%   nurbs.vecPoles ----- 控制点
-%   nurbs.vecWeights --- 控制点对应的权值点
-%   nurbs.bRational ---- 是否为有理B样条曲线
+%%% B-spline node: knot refinement
 function nurbsNew = RefineBSpline(nurbs, vecInsertKnot)
     nLength = length(vecInsertKnot);
-    % B样条曲线的幂次
+    % The degree of B-spline node
     nurbsNew.nDegree = nurbs.nDegree;
-    % 节点的索引
+    % Knot index
     nMinIndex = FindSpan(nurbs.nDegree, nurbs.vecKnots, vecInsertKnot(1));
     nMaxIndex = FindSpan(nurbs.nDegree, nurbs.vecKnots, vecInsertKnot(nLength)) + 1;
-    % 复制不变的节点矢量
+    % Copy invariant knot vector
     nurbsNew.vecKnots = zeros(length(nurbs.vecKnots)+nLength,1);
     nurbsNew.vecKnots(1:nMinIndex) = nurbs.vecKnots(1:nMinIndex);
     nurbsNew.vecKnots(nMaxIndex+nLength:end) = nurbs.vecKnots(nMaxIndex:end);
-    % 复制不变的控制点
+    % Copy invariant poles
     [nRow, nColumn] = size(nurbs.vecPoles);
     nurbsNew.vecPoles = zeros(nRow+nLength,nColumn);
     nurbsNew.vecPoles(1:nMinIndex-nurbs.nDegree,:) = nurbs.vecPoles(1:nMinIndex-nurbs.nDegree,:);
@@ -114,7 +109,7 @@ function nurbsNew = RefineBSpline(nurbs, vecInsertKnot)
     
     nIndex = nMaxIndex + nurbs.nDegree;
     nFlag = nMaxIndex + nurbs.nDegree + nLength;
-    % 新控制点和节点矢量
+    % New poles and knot vector
     for j = nLength:-1:1
         while vecInsertKnot(j) <= nurbs.vecKnots(nIndex) && nIndex > nMinIndex
             nurbsNew.vecPoles(nFlag-nurbs.nDegree-1,:) = nurbs.vecPoles(nIndex-nurbs.nDegree-1,:);
@@ -136,15 +131,15 @@ function nurbsNew = RefineBSpline(nurbs, vecInsertKnot)
         nurbsNew.vecKnots(nFlag) = vecInsertKnot(j);
         nFlag = nFlag - 1;
     end
-    % 控制点的权值
+    % The weights of poles
     nurbsNew.vecWeights = [];
 end
 
-%%% 将NURBS曲线进行划分
+%%% Divide the nurbs node
 function vecNurbs = SectionNurbs(nurbs)
     vecNurbs = cell(size(nurbs.vecPoles,1),1);
     nIndex = 0;
-    % 第一段NURBS曲线段
+    % The first nurbs node segment
     global g_nCompareError;
     nStartIndex = 1;
     while true
@@ -167,20 +162,20 @@ function vecNurbs = SectionNurbs(nurbs)
     nRepeatCount = 1;
     nFlagKnot = nurbs.vecKnots(nStartIndex);
     for i = nStartIndex+1:nEndIndex
-        % 重节点
+        % Heavy knot
         if abs(nurbs.vecKnots(i) - nFlagKnot) < g_nCompareError
             nRepeatCount = nRepeatCount + 1;
             continue;
         end
-        % 内节点不重复
+        % Inner knot is not duplicated
         if nRepeatCount == 1
             nurbsNew.vecKnots = [nurbsNew.vecKnots; nFlagKnot];
             nFlagKnot = nurbs.vecKnots(i);
             continue;
         end
-        % 内节点重复：重复度为nurbs.nDegree + 1
+        % Inner knot repeats: the repeatability is nurbs.nDegree + 1
         if nRepeatCount < nurbs.nDegree + 1
-            error('错误的参数：节点重复度为%d\n', nRepeatCount);
+            error('Wrong parameter: knot repeatability is %d\n', nRepeatCount);
         end
         nurbsNew.vecKnots = [nurbsNew.vecKnots; ones(nRepeatCount,1) * nFlagKnot];
         if length(nurbsNew.vecKnots) == nRepeatCount
@@ -196,12 +191,12 @@ function vecNurbs = SectionNurbs(nurbs)
         nPointIndex = nPointIndex + nPointCount;
         nIndex = nIndex + 1; 
         vecNurbs{nIndex} = nurbsNew;
-        % 重置标识值
+        % Reset identification value
         nurbsNew.vecKnots = ones(nRepeatCount,1) * nFlagKnot;
         nFlagKnot = nurbs.vecKnots(i);
         nRepeatCount = 1;
     end
-    % 最后一段NURBS曲线段
+    % The last nurbs node segment
     nurbsNew.vecKnots = [nurbsNew.vecKnots; ones(nRepeatCount,1) * nFlagKnot];
     if nPointIndex ~= size(nurbs.vecPoles,1)
         nPointCount = length(nurbsNew.vecKnots) - nurbsNew.nDegree - 1;
@@ -214,7 +209,7 @@ function vecNurbs = SectionNurbs(nurbs)
         vecNurbs{nIndex} = nurbsNew;
     end
     vecNurbs = vecNurbs(1:nIndex);
-    if nPointIndex ~= size(nurbs.vecPoles,1) - (length(nurbs.vecKnots) - nEndIndex);
-        error('错误的结果：控制点存在遗漏！\n');
+    if nPointIndex ~= size(nurbs.vecPoles,1) - (length(nurbs.vecKnots) - nEndIndex)
+        error('Wrong result: Missing poles!\n');
     end
 end

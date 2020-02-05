@@ -1,40 +1,41 @@
-%% 将圆弧按照规定的精度离散为小线段
-% 参数strG17：坐标平面
-% 参数strCurGId：G指令(G2或G3)
-% 参数nxLastPos：圆弧的起点坐标
-% 参数nxCurPos：圆弧的终点坐标
-% 参数nxCurParam：圆弧的参数
-% 返回值vecPoints：圆弧离散后的数据点
+%% Scatter arc into small line segments with specified accuracy
+% Parameter strG17: Coordinate plane
+% Parameter strCurGId: G command (G2 or G3)
+% Parameter nxLastPos: Start point of arc
+% Parameter nxCurPos: End point of arc
+% Parameter nxCurParam: Arc parameters
+% Return value vecPoints: The scatter points of arc
 function vecPoints = ScatterArc(strG17, strCurGId, nxLastPos, nxCurPos, nxCurParam, nDeflection)
-    %%% 圆弧指令G02、G03（G02/G03 X_Y_Z_R_(I_J_K_)）
-    % G02指定以顺时针方式插补，G03为逆时针
-    % R的值为负时表明圆弧段大于半圆，而为正时则表明圆弧段小于或等于半圆
-    % G17设定X-Y工作平面，G18设定Z-X工作平面，G19设定Y-Z工作平面
-    % 参数检查
+    % Arc command G02, G03 (G02/G03 X_Y_Z_R_(I_J_K_))
+    % G02 specifies clockwise interpolation, G03 is counterclockwise
+    % A negative value of R indicates that the arc segment is larger than a semicircle, while a positive value of R
+    % indicates that the arc segment is less than or equal to a semicircle.
+    % G17 sets the X-Y work plane, G18 sets the Z-X work plane, and G19 sets the Y-Z work plane
+    % Parameter check
     if ~strcmp(strCurGId, 'G2') && ~strcmp(strCurGId, 'G3')
-        error('错误的参数值：%s，该指令不是圆弧指令！', strCurGId);
+        error('Wrong parameter value: %s, this command is not a arc command!', strCurGId);
     end
-    % 参数默认值
+    % Default parameters
     if isempty(strG17)
         strG17 = 'G17';
     end
-    % 将坐标转化为平面坐标
+    % Convert coordinates to plane coordinates
     [nxLastTwoAxis, nLastThreeAxis] = GetTwoAxisByPlane(strG17, nxLastPos);
     [nxCurTwoAxis, nCurThreeAxis] = GetTwoAxisByPlane(strG17, nxCurPos);
     if nLastThreeAxis ~= nCurThreeAxis
-        error('圆弧的起点和终点不在同一坐标平面内！');
+        error('The start and end points of the arc are not in the same coordinate plane!');
     end
-    % 圆心
+    % Arc center
     [nxArcCenter, ~] = GetTwoAxisByPlane(strG17, nxCurParam(1:3));
     global g_IJLIncrementalMode;
     if g_IJLIncrementalMode
         nxArcCenter = nxArcCenter + nxLastTwoAxis;
     end
-    % 将半径编程统一为圆心编程
+    % Unified radius programming to center point programming
     if ~isinf(nxCurParam(4))
         nxArcCenter = TransRadiusToArcCenter(strCurGId, nxLastTwoAxis, nxCurTwoAxis, nxCurParam(4));
     end
-    % 计算夹角
+    % Calculate the angle
     nxStartVec = (nxLastTwoAxis - nxArcCenter) / norm(nxLastTwoAxis - nxArcCenter);
     nxEndVec = (nxCurTwoAxis - nxArcCenter) / norm(nxCurTwoAxis - nxArcCenter);
     nCosValue = nxStartVec(1) * nxEndVec(1) + nxStartVec(2) * nxEndVec(2);
@@ -51,11 +52,11 @@ function vecPoints = ScatterArc(strG17, strCurGId, nxLastPos, nxCurPos, nxCurPar
     if nSinValue < 0
         nAngle = 2 * pi - nAngle;
     end
-    % 是否为整圆
+    % Whether it is a full circle
     if 0 == nAngle && isinf(nxCurParam(4))
         nAngle = 2 * pi;
     end
-    % 根据精度离散圆弧
+    % Scatter arc based on accuracy
     nRadius = norm(nxLastTwoAxis - nxArcCenter);
     nStepAngle = 2 * acos(1 - min(nDeflection, nRadius) / nRadius);
     nCount = ceil(nAngle / nStepAngle) + 1;
@@ -63,7 +64,7 @@ function vecPoints = ScatterArc(strG17, strCurGId, nxLastPos, nxCurPos, nxCurPar
     if strcmp(strCurGId, 'G2')
         nStepAngle = -nStepAngle;
     end
-    % 计算离散的点
+    % Calculate scatter points
     vecPoints = zeros(nCount+1,3);
     nxTempAxis = zeros(1,2);
     for i = 0:nCount
@@ -74,26 +75,26 @@ function vecPoints = ScatterArc(strG17, strCurGId, nxLastPos, nxCurPos, nxCurPar
     end
 end
 
-%% 将半径编程统一为圆心编程
-% 参数strCurGId：G指令(G2或G3)
-% 参数nxLastPos：圆弧的起点坐标
-% 参数nxCurPos：圆弧的终点坐标
-% 参数nRadius：圆弧的半径
-% 返回值nxArcCenter：圆弧的圆心
+%%% Unified radius programming to center point programming
+% Parameter strCurGId: G command (G2 or G3)
+% Parameter nxLastPos: Start point of arc
+% Parameter nxCurPos: End point of arc
+% Parameter nRadius: Arc radius
+% Return value nxArcCenter: Arc center
 function nxArcCenter = TransRadiusToArcCenter(strCurGId, nxLastPos, nxCurPos, nRadius)
-    % 计算弦长
+    % Calculate chord length
     nChordLength = norm(nxCurPos - nxLastPos);
-    % 计算旋转角度
+    % Calculate the rotation angle
     nCosAngle = nChordLength * 0.5 / abs(nRadius);
     nSinAngle = sqrt(1 - nCosAngle * nCosAngle);
-    % 计算旋转方向
+    % Calculate the direction of rotation
     if strcmp('G2', strCurGId) && nRadius > 0
         nSinAngle = -nSinAngle;
     end
     if strcmp('G3', strCurGId) && nRadius < 0
         nSinAngle = -nSinAngle;
     end
-    % 计算圆心
+    % Calculate the center of arc
     nAlpha = abs(nRadius) / nChordLength;
     nxArcCenter = zeros(1,2);
     nxArcCenter(1) = nxLastPos(1) + nAlpha * ((nxCurPos(1) - nxLastPos(1)) * nCosAngle...
@@ -102,13 +103,12 @@ function nxArcCenter = TransRadiusToArcCenter(strCurGId, nxLastPos, nxCurPos, nR
         + (nxCurPos(2) - nxLastPos(2)) * nCosAngle);
 end
 
-%% 根据坐标平面将三维坐标转换为二维坐标
-% 参数strG17：坐标平面
-% 参数nxThreeAxis：三维空间中的坐标
-% 返回值nxTwoAxis：二维空间中的坐标
-% 返回值nThreeAxis：第三维空间的坐标值
+%%% Convert 3D coordinate to 2D coordinate according to the coordinate plane
+% Parameter strG17: Coordinate plane
+% Parameter nxThreeAxis: Coordinate in three-dimension
+% Return value nxTwoAxis: Coordinate in two-dimension
+% Return value nThreeAxis: Coordinate in the third dimension
 function [nxTwoAxis, nThreeAxis] = GetTwoAxisByPlane(strG17, nxThreeAxis)
-    % 初始化
     nxTwoAxis = zeros(1,2);
     switch strG17
         case 'G17'
@@ -124,17 +124,16 @@ function [nxTwoAxis, nThreeAxis] = GetTwoAxisByPlane(strG17, nxThreeAxis)
             nxTwoAxis(2) = nxThreeAxis(3);
             nThreeAxis = nxThreeAxis(1);
         otherwise
-            error('错误的G指令：%s', strG17);
+            error('Wrong G command: %s\n', strG17);
     end
 end
 
-%% 根据坐标平面将二维坐标转换为三维坐标
-% 参数strG17：坐标平面
-% 参数nxTwoAxis：二维空间中的坐标
-% 参数nThreeAxis：第三维空间的坐标
-% 返回值nxThreeAxis：三维空间中的坐标
+%%% Convert 2D coordinate to 3D coordinate according to the coordinate plane
+% Parameter strG17: Coordinate plane
+% Parameter nxTwoAxis: Coordinate in two-dimension
+% Parameter nThreeAxis: Coordinate in the third dimension
+% Return value nxThreeAxis: Coordinate in three-dimension
 function nxThreeAxis = GetThreeAxisByPlane(strG17, nxTwoAxis, nThreeAxis)
-    % 初始化
     nxThreeAxis = zeros(1,3);
     switch strG17
         case 'G17'
@@ -150,6 +149,6 @@ function nxThreeAxis = GetThreeAxisByPlane(strG17, nxTwoAxis, nThreeAxis)
             nxThreeAxis(3) = nxTwoAxis(2);
             nxThreeAxis(1) = nThreeAxis;
         otherwise
-            error('错误的G指令：%s', strG17);
+            error('Wrong G command: %s\n', strG17);
     end
 end
