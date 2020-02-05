@@ -1,3 +1,3 @@
-# Matlab程序
+# Matlab application
 
-每个文件夹下都是独立的程序，对应的说明详见各个文件夹下的README.md文件。
+Each folder is an independent application, and the corresponding instructions are detailed in the README.md file under each folder.
