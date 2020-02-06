@@ -1,39 +1,63 @@
-# 读取BSpline工具简介
-## 工具目的及生成
-该工具用于读取文件中的G代码，并画出对应的轨迹。
-其中，NURBS曲线的G代码标识为G06.2，其形式如下所示
+# Read B-spline Tool Introduction
+
+## Tool purpose and generation
+
+This tool is used to read G code in the file and draw the corresponding track. Among them, the G code identification of nurbs node is G06.2, and its form is as follows
+
 ```
-G06.2 P3 K0.0 X1.0 Y0.0 Z0.0 R1.0	% P表示NURBS曲线的幂次
-K0.0 X1.0 Y1.0 Z0.0 R0.5			% K表示NURBS曲线的节点矢量
-K0.0 X-1.0 Y1.0 Z0.0 R0.5			% X、Y、Z表示NURBS曲线的控制点
-K0.0 X-1.0 Y0.0 Z0.0 R1.0			% R表示NURBS曲线的控制点的权值
+G06.2 P3 K0.0 X1.0 Y0.0 Z0.0 R1.0   % P is the degree of nurbs node
+K0.0 X1.0 Y1.0 Z0.0 R0.5            % K is the knot vector of nurbs node
+K0.0 X-1.0 Y1.0 Z0.0 R0.5           % X, Y, Z are the poles of nurbs node
+K0.0 X-1.0 Y0.0 Z0.0 R1.0           % R is the weight of pole of nurbs node
 K1.0
 K1.0
 K1.0
 K1.0
 ```
 
-使用命令`guide`打开`ReadBSplineTool.fig`，可以查看并修改该工具的界面布局及功能按钮。
-使用命令`mcc -m ReadBSplineTool.m `，可以编译生成可执行文件`ReadBSplineTool.exe`。
+Use the command `guide` to open `ReadBSplineTool.fig`, you can view and modify the interface layout and function buttons of the tool.
 
-## 参数
-### 视图
-画轨迹图时的视图，可供选择的视图有：X-Y平面，Y-Z平面，Z-X平面，三维视图。
-### 显示NURBS曲线的控制点
-画图时是否画NURBS曲线的控制点，若勾选则画，不勾选则不画。
-### 圆心编程IJK增量方式
-G代码表示圆弧时，IJK表示的圆心是否是增量方式，不勾选则为绝对值，IJK的值直接表示圆心，否则需要加上起点的值才能作为圆心的坐标。
-### 曲线离散精度
-画图时用离散的点代替曲线（圆弧或NURBS曲线），这里的精度表示用散点逼近曲线的精度。
-## 加工文件
-可以手动输入欲分析的文件路径，或者通过`导入文件`按钮导入欲分析的文件路径。
-## 画图颜色
-这里可以设置文件中不同线形所对应的颜色。
-## 导入文件
-选择欲分析的文件，导入后，可以在加工文件框内查看或修改导入的文件。
-## 画图比较
-导入欲分析的文件，设置相应的参数，然后点击该按钮，可以画出文件对应的轨迹图。
-## 清空图像
-关闭前面执行`画图比较`画的所有图像。
-## 关闭工具
-先`清空图像`，然后关闭该工具。
+Use the command `mcc -m ReadBSplineTool.m` to compile and generate the executable file `ReadBSplineTool.exe`.
+
+## Parameters
+
+### View
+
+Views when drawing track. The available views are: X-Y Plane, Y-Z Plane, Z-X Plane, and 3D View.
+
+### Display poles of nurbs node
+
+Whether to draw the poles of nurbs node when drawing track. If checked, it is drawn, if not checked, it is not drawn.
+
+### Circle programming IJK incremental mode
+
+When the G code represents a circular arc, whether the center of the circle indicated by IJK is an incremental mode or not. If it is not checked, it is an absolute value. The value of IJK directly represents the center of the circle, otherwise you need to add the start point to use as the coordinates of the center of the circle.
+
+### Curve scatter precision
+
+Use scattered points to replace the curve (arc or nurbs node) when drawing track. The precision here means the precision of approximating the curve with scattered points.
+
+## Processing files
+
+You can manually enter the file path to be analyzed, or import the file path through the button `Importing Files`.
+
+## Drawing color
+
+Here you can set the colors corresponding to different line shapes in the file.
+
+## Importing Files
+
+Select the files to be analyzed. After importing, you can view or modify the imported files in the processing files box.
+
+## Drawing Comparison
+
+Import the files to be analyzed, set the corresponding parameters, and then click this button to draw the corresponding track of the files.
+
+## Clear Figures
+
+Clear all figures previously executed by `Drawing Comparison`.
+
+## Close Tool
+
+Clear all figures, and then close this tool.
+
