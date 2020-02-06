@@ -44,11 +44,16 @@ function [nxDeriv0, nxDeriv1, nxDeriv2] = GetBSplineDeriv(nurbs, vecWeightedPole
     deBoorInfo.nStartIndex = 1;
     deBoorInfo.nEndIndex = nurbs.nDegree - 2;
     [vecPoles, vecTempPoles] = GetIteratePole(nurbs, deBoorInfo, vecPoles, vecTempPoles);
-    % Second-order derivative
-    nxDeriv2 = nurbs.nDegree * (nurbs.nDegree - 1) / (nurbs.vecKnots(nKnotIndex+1) - nurbs.vecKnots(nKnotIndex))...
-        * ((vecPoles(nurbs.nDegree+1, :) - vecPoles(nurbs.nDegree, :)) / (nurbs.vecKnots(nKnotIndex+2)...
-        - nurbs.vecKnots(nKnotIndex)) - (vecPoles(nurbs.nDegree, :) - vecPoles(nurbs.nDegree-1, :))...
-        / (nurbs.vecKnots(nKnotIndex+1) - nurbs.vecKnots(nKnotIndex-1)));
+    if nurbs.nDegree > 1
+        % Second-order derivative
+        nxDeriv2 = nurbs.nDegree * (nurbs.nDegree - 1) / (nurbs.vecKnots(nKnotIndex+1) - nurbs.vecKnots(nKnotIndex))...
+            * ((vecPoles(nurbs.nDegree+1, :) - vecPoles(nurbs.nDegree, :)) / (nurbs.vecKnots(nKnotIndex+2)...
+            - nurbs.vecKnots(nKnotIndex)) - (vecPoles(nurbs.nDegree, :) - vecPoles(nurbs.nDegree-1, :))...
+            / (nurbs.vecKnots(nKnotIndex+1) - nurbs.vecKnots(nKnotIndex-1)));
+    else
+        nxDeriv2 = zeros(size(vecPoles(1,:)));
+        deBoorInfo.nEndIndex = 0;
+    end
     
     deBoorInfo.nStartIndex = deBoorInfo.nEndIndex + 1;
     deBoorInfo.nEndIndex = deBoorInfo.nStartIndex;
