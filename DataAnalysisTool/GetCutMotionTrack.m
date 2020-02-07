@@ -1,16 +1,16 @@
-%% 获取剪切运动轨迹
+%% Get cut motion track
 function [cutMotionTracks, cutMotionFlags] = GetCutMotionTrack(filePath, cutIndexs)
     cutMotionTracks = [];
     cutMotionFlags = [];
     [motionTracks, motionFlags] = GetMotionTrack(filePath);
-    % 参数判断
+    % Parameter judgment
     if length(motionTracks) ~= 1 || length(motionTracks) ~= length(motionFlags)
-        fprintf('运动轨迹不满足剪切条件：运动轨迹数为%d\n', length(motionTracks));
+        fprintf('The motion track does not meet the cutting conditions: the number of motion track is %d\n', length(motionTracks));
         return;
     end
     motionTrack = motionTracks{1};
     motionFlag = motionFlags{1};
-    % 获取剪切轨迹
+    % Get cut track
     global g_period;
     cutMotionTracks = cell(length(cutIndexs),1);
     cutMotionFlags = cell(length(cutIndexs),1);

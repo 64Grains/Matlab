@@ -22,7 +22,7 @@ function varargout = DataAnalysisTool(varargin)
 
 % Edit the above text to modify the response to help DataAnalysisTool
 
-% Last Modified by GUIDE v2.5 26-Nov-2017 18:02:14
+% Last Modified by GUIDE v2.5 07-Feb-2020 18:51:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,7 +58,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-%%% 初始化GUI
+%%% Initialize GUI
 Initialize_gui(handles);
 
 % UIWAIT makes DataAnalysisTool wait for user response (see UIRESUME)
@@ -76,13 +76,13 @@ function varargout = DataAnalysisTool_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-%%%初始化GUI
+%%% Initialize GUI
 function Initialize_gui(handles)
 global FileEntity;
 if isfield(handles, 'metricdata')
     return;
 end
-display('————————————————————————————————————————');
+disp('--------------------------------------------------------------------------');
 % Initialize FileEntity
 FileEntity{1}.FigHandle = 1;
 if size(FileEntity,2) > 1
@@ -146,12 +146,12 @@ set(handles.edit_EndTime2, 'String', handles.metricdata.cutTime2{2});
 set(handles.edit_StartTime3, 'String', handles.metricdata.cutTime3{1});
 set(handles.edit_EndTime3, 'String', handles.metricdata.cutTime3{2});
 % Update Tool Figure handles structure
-set(handles.figure1, 'NumberTitle', 'off', 'Name', '数据分析工具');
+set(handles.figure1, 'NumberTitle', 'off', 'Name', 'Data analysis tool');
 % Save the value of parameters
 guidata(handles.figure1, handles);
 
 
-%%% 控制周期
+%%% Sampling period
 function edit_Period_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_Period (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -162,7 +162,7 @@ function edit_Period_Callback(hObject, eventdata, handles)
 period = str2double(get(hObject, 'String'));
 if isnan(period) || period <= 0
     set(hObject, 'String', handles.metricdata.period);
-    errordlg('请输入正确的控制周期！', 'Error');
+    errordlg('Please enter the correct sampling period!', 'Error');
     return;
 end
 handles.metricdata.period = period;
@@ -182,7 +182,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 数据格式
+%%% Data format
 function edit_DataFormat_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_DataFormat (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -191,7 +191,7 @@ function edit_DataFormat_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_DataFormat as text
 %        str2double(get(hObject,'String')) returns contents of edit_DataFormat as a double
 dataFormat = get(hObject, 'String');
-% 检查数据格式：格式化数据只能包含%f和%c
+% Check data format: formatted data can only contain %f and %c
 hasError = 1;
 for i = 1:length(dataFormat)
     c = dataFormat(i);
@@ -202,7 +202,7 @@ for i = 1:length(dataFormat)
         hasError = 1;
         break;
     end
-    % 判断下一个字符是否为f或c
+    % Judge if the next character is f or c
     c = dataFormat(i+1);
     if c ~= 'f' && c ~= 'c'
         hasError = 1;
@@ -214,7 +214,7 @@ for i = 1:length(dataFormat)
 end
 if hasError
     set(hObject, 'String', handles.metricdata.dataFormat);
-    errordlg('请输入正确的数据格式，数据格式中必须包含有%f，也可以包含有%c（其中，%f代表数值，%c代表字符）！', 'Warning');
+    errordlg('Please enter the correct data format. The data format must include %f, and it also can include %c (where %f represents a numeric value and %c represents a character)!', 'Warning');
     return;
 end
 handles.metricdata.dataFormat = dataFormat;
@@ -234,7 +234,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 有效数据列
+%%% Valid data column
 function edit_ValidColumn_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_ValidColumn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -243,21 +243,21 @@ function edit_ValidColumn_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_ValidColumn as text
 %        str2double(get(hObject,'String')) returns contents of edit_ValidColumn as a double
 validColumn = get(hObject, 'String');
-% 检查有效数据列：只能包含数字和空格
+% Check for valid data column: it can only contain numbers and spaces
 for i = 1:length(validColumn)
     c = validColumn(i);
     if c ~= ' ' && (c < '0' || c > '9')
         set(hObject, 'String', handles.metricdata.validColumn);
-        errordlg('请输入正确的有效数据列，只能包含数字和空格！', 'Warning');
+        errordlg('Please enter the correct valid data column. It can only contain numbers and spaces!', 'Warning');
         return;
     end
 end
-% 检查索引值是否大于零
+% Check if the index value is greater than zero
 validColumnNum = textscan(validColumn, '%f');
 validColumnNum = validColumnNum{1};
 if length(validColumnNum) < 1 || validColumnNum(1) < 1
     set(hObject, 'String', handles.metricdata.validColumn);
-    errordlg('请输入正确的有效数据列，有效数据列必须大于1！', 'Warning');
+    errordlg('Please enter the correct valid data column. The valid data column must be greater than 1!', 'Warning');
     return;
 end
 handles.metricdata.validColumn = validColumn;
@@ -277,7 +277,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 删除首尾冗余数据
+%%% Delete redundant data at the beginning and end
 % --- Executes on button press in checkbox_DeleteRepeat.
 function checkbox_DeleteRepeat_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_DeleteRepeat (see GCBO)
@@ -289,42 +289,49 @@ handles.metricdata.deleteRepeat = get(hObject, 'Value');
 guidata(hObject, handles);
 
 
-%%% 导入文件
+%%% Importing files
 % --- Executes on button press in pushbutton_ImportFiles.
 function pushbutton_ImportFiles_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_ImportFiles (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 try
-    [fileNames, fileDir] = uigetfile({'*.*', '所有文件(*.*)'},...
+    [fileNames, fileDir] = uigetfile({'*.*', 'All files(*.*)'},...
         'Open File', 'MultiSelect', 'on', handles.metricdata.dataFileDir);
 catch
-    errordlg('打开加工文件失败！', '错误');
+    errordlg('Failed to open the processing file!', 'Error');
     return;
 end
 if isempty(fileNames) || isnumeric(fileNames)
-    errordlg('导入文件为空！', '警告');
+    errordlg('The imported files are empty!', 'Warning');
     return;
 end
-% 保存文件目录
+% Save file directory
 handles.metricdata.dataFileDir = fileDir;
 if ~iscell(fileNames)
-    % 只有一个文件
+    % Only one file
     handles.metricdata.dataFiles{1} = strcat(fileDir, fileNames);
     for i = 2:6
         handles.metricdata.dataFiles{i} = '';
     end
 elseif length(fileNames) > 6
-    errordlg('同时最多只能打开六个文件，请重新选择！', '警告');
+    errordlg('You can only open up to six files at the same time, please select again!', 'Warning');
     return;
 else
-    % 包含多个文件
+    % Contains multiple files
     for i = 1:length(fileNames)
         handles.metricdata.dataFiles{i} = strcat(fileDir, fileNames{i});
     end
     for i = length(fileNames)+1:6
         handles.metricdata.dataFiles{i} = '';
     end
+end
+% Get data format from file
+global g_dataFormat;
+dataFormat = GetDataFormat(handles.metricdata.dataFiles{1});
+if ~isempty(dataFormat)
+    g_dataFormat = dataFormat;
+    handles.metricdata.dataFormat = dataFormat;
 end
 set(handles.text_DataFile1, 'String', handles.metricdata.dataFiles{1});
 set(handles.text_DataFile2, 'String', handles.metricdata.dataFiles{2});
@@ -335,7 +342,7 @@ set(handles.text_DataFile6, 'String', handles.metricdata.dataFiles{6});
 guidata(hObject, handles);
 
 
-%%% 画图比较
+%%% Drawing comparison
 % --- Executes on button press in pushbutton_DrawAndCompare.
 function pushbutton_DrawAndCompare_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_DrawAndCompare (see GCBO)
@@ -347,29 +354,29 @@ allFiles = ParseValidFilePath(handles.metricdata.dataFiles);
 AnalysisMotionTrack(allMotionTracks, allMotionFlags);
 
 
-%%% 执行剪切
+%%% Perform cut
 % --- Executes on button press in pushbutton_ExecCut.
 function pushbutton_ExecCut_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_ExecCut (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% 检查当前是否只有一个文件
+% Check if there is only one file currently
 allFiles = ParseValidFilePath(handles.metricdata.dataFiles);
 if length(allFiles) < 1
-    errordlg('数据文件为空！', '警告');
+    errordlg('The data file is empty!', 'Warning');
     return;
 elseif length(allFiles) > 1
-    errordlg('只支持对单个文件进行剪切！', '警告');
+    errordlg('Only supports cutting a single file!', 'Warning');
     return;
 end
-% 检查是否存在有效的剪切范围
+% Check if there is a valid cutting range
 if handles.metricdata.cutTime1{1} >= handles.metricdata.cutTime1{2}...
     && handles.metricdata.cutTime2{1} >= handles.metricdata.cutTime2{2}...
     && handles.metricdata.cutTime3{1} >= handles.metricdata.cutTime3{2}
-    errordlg('没有有效的剪切范围！', '警告');
+    errordlg('No effective cutting range!', 'Warning');
     return;
 end
-% 剪切范围
+% Cut range
 GlobalVariable(handles);
 global g_period;
 cutIndexs = cell(3,1);
@@ -390,12 +397,12 @@ if handles.metricdata.cutTime3{1} < handles.metricdata.cutTime3{2}
     cutIndexs{index}.endIndex = int32(handles.metricdata.cutTime3{2} / g_period);
 end
 cutIndexs = cutIndexs(1:index);
-% 执行剪切
+% Perform cut
 [cutMotionTracks, cutMotionFlags] = GetCutMotionTrack(allFiles{1}, cutIndexs);
 AnalysisMotionTrack(cutMotionTracks, cutMotionFlags);
 
 
-%%% 清空图像
+%%% Clear figure
 % --- Executes on button press in pushbutton_ClearFigure.
 function pushbutton_ClearFigure_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_ClearFigure (see GCBO)
@@ -420,12 +427,12 @@ try
         FileEntity{1}.FigHandle = 1;
     end
 catch
-    errordlg('Figure关闭时出错！', '错误');
+    errordlg('An error occurred when Figure was closed!', 'Error');
 end
 uiresume(handles.figure1);
 
 
-%%% 关闭工具
+%%% Close tool
 % --- Executes on button press in pushbutton_CloseTool.
 function pushbutton_CloseTool_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_CloseTool (see GCBO)
@@ -435,7 +442,7 @@ close all;
 clear all;
 
 
-%%% 第一组起始时间
+%%% Start time of the first group
 function edit_StartTime1_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_StartTime1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -446,7 +453,7 @@ function edit_StartTime1_Callback(hObject, eventdata, handles)
 time = str2double(get(hObject, 'String'));
 if isnan(time) || time < 0
     set(hObject, 'String', handles.metricdata.cutTime1{1});
-    errordlg('请输入正确的起始时间！', 'Error');
+    errordlg('Please enter the correct start time!', 'Error');
     return;
 end
 handles.metricdata.cutTime1{1} = time;
@@ -466,7 +473,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第一组终止时间
+%%% End time of the first group
 function edit_EndTime1_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_EndTime1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -477,7 +484,7 @@ function edit_EndTime1_Callback(hObject, eventdata, handles)
 time = str2double(get(hObject, 'String'));
 if isnan(time) || time < 0
     set(hObject, 'String', handles.metricdata.cutTime1{2});
-    errordlg('请输入正确的终止时间！', 'Error');
+    errordlg('Please enter the correct end time!', 'Error');
     return;
 end
 handles.metricdata.cutTime1{2} = time;
@@ -497,7 +504,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第二组起始时间
+%%% Start time of the second group
 function edit_StartTime2_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_StartTime2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -508,7 +515,7 @@ function edit_StartTime2_Callback(hObject, eventdata, handles)
 time = str2double(get(hObject, 'String'));
 if isnan(time) || time < 0
     set(hObject, 'String', handles.metricdata.cutTime2{1});
-    errordlg('请输入正确的起始时间！', 'Error');
+    errordlg('Please enter the correct start time!', 'Error');
     return;
 end
 handles.metricdata.cutTime2{1} = time;
@@ -528,7 +535,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第二组终止时间
+%%% End time of the second group
 function edit_EndTime2_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_EndTime2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -539,7 +546,7 @@ function edit_EndTime2_Callback(hObject, eventdata, handles)
 time = str2double(get(hObject, 'String'));
 if isnan(time) || time < 0
     set(hObject, 'String', handles.metricdata.cutTime2{2});
-    errordlg('请输入正确的终止时间！', 'Error');
+    errordlg('Please enter the correct end time!', 'Error');
     return;
 end
 handles.metricdata.cutTime2{2} = time;
@@ -559,7 +566,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第三组起始时间
+%%% Start time of the third group
 function edit_StartTime3_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_StartTime3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -570,7 +577,7 @@ function edit_StartTime3_Callback(hObject, eventdata, handles)
 time = str2double(get(hObject, 'String'));
 if isnan(time) || time < 0
     set(hObject, 'String', handles.metricdata.cutTime3{1});
-    errordlg('请输入正确的起始时间！', 'Error');
+    errordlg('Please enter the correct start time!', 'Error');
     return;
 end
 handles.metricdata.cutTime3{1} = time;
@@ -590,7 +597,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 第三组终止时间
+%%% End time of the third group
 function edit_EndTime3_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_EndTime3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -601,7 +608,7 @@ function edit_EndTime3_Callback(hObject, eventdata, handles)
 time = str2double(get(hObject, 'String'));
 if isnan(time) || time < 0
     set(hObject, 'String', handles.metricdata.cutTime3{2});
-    errordlg('请输入正确的终止时间！', 'Error');
+    errordlg('Please enter the correct end time!', 'Error');
     return;
 end
 handles.metricdata.cutTime3{2} = time;
@@ -621,7 +628,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-%%% 画轨迹图
+%%% Draw track
 % --- Executes on button press in checkbox_DrawTrack.
 function checkbox_DrawTrack_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_DrawTrack (see GCBO)
@@ -633,7 +640,7 @@ handles.metricdata.drawTrack = get(hObject, 'Value');
 guidata(hObject, handles);
 
 
-%%% 画时间-速度图
+%%% Draw time-speed
 % --- Executes on button press in checkbox_DrawTimeSpeed.
 function checkbox_DrawTimeSpeed_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_DrawTimeSpeed (see GCBO)
@@ -645,7 +652,7 @@ handles.metricdata.drawTimeSpeed = get(hObject, 'Value');
 guidata(hObject, handles);
 
 
-%%% 画时间-加速度图
+%%% Draw time-acceleration
 % --- Executes on button press in checkbox_DrawTimeAcc.
 function checkbox_DrawTimeAcc_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_DrawTimeAcc (see GCBO)
@@ -657,7 +664,7 @@ handles.metricdata.drawTimeAcc = get(hObject, 'Value');
 guidata(hObject, handles);
 
 
-%%% 画时间-加加速度图
+%%% Draw time-jerk
 % --- Executes on button press in checkbox_DrawTimeJerk.
 function checkbox_DrawTimeJerk_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_DrawTimeJerk (see GCBO)
@@ -669,7 +676,7 @@ handles.metricdata.drawTimeJerk = get(hObject, 'Value');
 guidata(hObject, handles);
 
 
-%%% 画距离-速度图
+%%% Draw distance-speed
 % --- Executes on button press in checkbox_DrawDistSpeed.
 function checkbox_DrawDistSpeed_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_DrawDistSpeed (see GCBO)
@@ -681,7 +688,7 @@ handles.metricdata.drawDistSpeed = get(hObject, 'Value');
 guidata(hObject, handles);
 
 
-%%% 单轴模式
+%%% Single axis mode
 % --- Executes on button press in checkbox_SingleAxisMode.
 function checkbox_SingleAxisMode_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox_SingleAxisMode (see GCBO)

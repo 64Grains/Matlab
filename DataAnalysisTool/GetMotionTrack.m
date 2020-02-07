@@ -1,11 +1,11 @@
-%% 获取运动轨迹
+%% Get motion track
 function [motionTracks, motionFlags] = GetMotionTrack(allFiles)
     motionTracks = [];
     motionFlags = [];
     if isempty(allFiles)
         return;
     end
-    % 解析文件
+    % Analyse files
     if ~iscell(allFiles)
         [motionTrack, motionFlag] = GetTrack(allFiles);
         if ~isempty(motionTrack)
@@ -29,25 +29,25 @@ function [motionTracks, motionFlags] = GetMotionTrack(allFiles)
     end
 end
 
-%% 获取运动轨迹
+%%% Get motion track
 function [motionTrack, motionFlag] = GetTrack(filePath)
     motionTrack = [];
     motionFlag = [];
-    % 检查文件是否存在
+    % Check if file exists
     fileExist = exist(filePath, 'file');
     if (0 == fileExist) || (7 == fileExist)
-        fprintf('文件(%s)不存在！\n', filePath);
+        fprintf('File (%s) does not exist!\n', filePath);
         return;
     end
-    % 文件名称
+    % file name
     fileInfo = dir(filePath);
     motionFlag = fileInfo.name;
-    % 轨迹
+    % track
     global g_dataFormat;
     fidRead = fopen(filePath, 'r');
     fAll = textscan(fidRead, g_dataFormat);
     fclose(fidRead);
-    % 筛选数值列
+    % Filter numeric columns
     validTrack = zeros(length(fAll{1}), length(fAll));
     index = 0;
     if size(validTrack,1) > 1
@@ -59,13 +59,13 @@ function [motionTrack, motionFlag] = GetTrack(filePath)
         end
     end
     validTrack = validTrack(:,1:index);
-    % 筛选有效数值列
+    % Filter for valid numeric column
     motionTrack = GetValidTrack(validTrack);
-    % 删除首尾冗余数据
+    % Delete redundant data at the beginning and end
     motionTrack = DeleteRepeatTrack(motionTrack);
 end
 
-%% 筛选有效数值列
+%%% Filter for valid numeric column
 function validTrack = GetValidTrack(origTrack)
     if size(origTrack,1) < 1
         validTrack = [];
@@ -92,14 +92,14 @@ function validTrack = GetValidTrack(origTrack)
     end
 end
 
-%% 删除首尾冗余数据
+%%% Delete redundant data at the beginning and end
 function simplifyData = DeleteRepeatTrack(origData)
     global g_deleteRepeat;
     if ~g_deleteRepeat
         simplifyData = origData;
         return;
     end
-    % 首部重复数据
+    % Redundant data at the beginning
     startIndex = 1;
     while startIndex < size(origData,1)
         if ~isequal(origData(startIndex,:), origData(startIndex+1,:))
@@ -107,7 +107,7 @@ function simplifyData = DeleteRepeatTrack(origData)
         end
         startIndex = startIndex + 1;
     end
-    % 尾部重复数据
+    % Redundant data at the end
     endIndex = size(origData,1);
     while endIndex > 1
         if ~isequal(origData(endIndex,:), origData(endIndex-1,:))
@@ -115,6 +115,6 @@ function simplifyData = DeleteRepeatTrack(origData)
         end
         endIndex = endIndex - 1;
     end
-    % 截取数据
+    % Cut data
     simplifyData = origData(startIndex:endIndex,:);
 end

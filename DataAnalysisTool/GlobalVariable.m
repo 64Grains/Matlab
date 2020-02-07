@@ -1,17 +1,18 @@
-%% 全局变量
+%% Global variables
 function GlobalVariable(handles)
-    % 参数
-    global g_period;            % 控制周期
-    global g_dataFormat;        % 数据格式
-    global g_validColumn;       % 有效数据列
-    global g_deleteRepeat;      % 删除首尾重复数据
-    global g_SingleAxisMode;    % 单轴模式：该模式下只能分析单轴速度、加速度和加加速度，不能画轨迹和距离-速度图
-    global g_drawTrack;         % 画轨迹图
-    global g_drawTimeSpeed;     % 画时间-速度图
-    global g_drawTimeAcc;       % 画时间-加速度图
-    global g_drawTimeJerk;      % 画时间-加加速度图
-    global g_drawDistSpeed;     % 画距离-速度图
-    % 初始化
+    % Parameters
+    global g_period;            % Sampling period
+    global g_dataFormat;        % Data format
+    global g_validColumn;       % Valid data column
+    global g_deleteRepeat;      % Delete redundant data at the beginning and end
+    global g_SingleAxisMode;    % Single axis mode: In this mode, only single axis speed, acceleration, and jerk can be analyzed.
+                                % Track and distance-speed cannot be drawn.
+    global g_drawTrack;         % Draw track
+    global g_drawTimeSpeed;     % Draw time-speed
+    global g_drawTimeAcc;       % Draw time-acceleration
+    global g_drawTimeJerk;      % Draw time-jerk
+    global g_drawDistSpeed;     % Draw distance-speed
+    % Initialize
     g_period = handles.metricdata.period;
     g_dataFormat = handles.metricdata.dataFormat;
     g_validColumn = textscan(handles.metricdata.validColumn, '%f');

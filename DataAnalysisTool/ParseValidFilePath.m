@@ -1,4 +1,4 @@
-%% 解析出有效的文件路径
+%% Parse out valid file paths
 function validFilePaths = ParseValidFilePath(origFilePaths)
     validFilePaths = cell(length(origFilePaths),1);
     index = 1;

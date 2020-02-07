@@ -1,14 +1,14 @@
-%% 分析运动轨迹，并根据选项画图
+%% Analyze motion track and draw figures based on options
 function AnalysisMotionTrack(motionTracks, motionFlags)
     if isempty(motionTracks)
-        fprintf('没有需要分析的运动轨迹！\n');
+        fprintf('No motion track to analyze!\n');
         return;
     end
-    % 画图选项
+    % Drawing options
     global FileEntity;
     figId = FileEntity{end}.FigHandle;
     figColor = {'.-b', '.-g', '.-r', '.-m', '.-c', '.-y', '.-w'};
-    % 画图
+    % Drawing
     figLegend = '';
     for i = 1:min(length(motionTracks), length(figColor)-1)
         Id = DrawMotionTrack(motionTracks{i}, figId, figColor{i});
@@ -21,15 +21,15 @@ function AnalysisMotionTrack(motionTracks, motionFlags)
     end
 end
 
-%% 运动轨迹画图
+%%% Track drawing
 function Id = DrawMotionTrack(motionTrack, figId, figColor)
     Id = figId;
-    % 轨迹
+    % track
     global g_drawTrack;
     if g_drawTrack
         Id = DrawTrack(motionTrack, Id, figColor);
     end
-    % 速度
+    % speed
     global g_drawTimeSpeed;
     global g_drawTimeAcc;
     global g_drawTimeJerk;
@@ -39,44 +39,44 @@ function Id = DrawMotionTrack(motionTrack, figId, figColor)
     end
     motionSpeed = GetSpeed(motionTrack);
     if g_drawTimeSpeed
-        Id = DrawMotionWithTitle(motionSpeed, Id, figColor, '时间-速度图');
+        Id = DrawMotionWithTitle(motionSpeed, Id, figColor, 'Time-Speed');
     end
     if g_drawDistSpeed
         Id = DrawDistSpeed(motionSpeed, Id, figColor);
     end
-    % 加速度
+    % acceleration
     if ~g_drawTimeAcc && ~g_drawTimeJerk
         return;
     end
     motionAcc = GetAcc(motionSpeed);
     if g_drawTimeAcc
-        Id = DrawMotionWithTitle(motionAcc, Id, figColor, '时间-加速度图');
+        Id = DrawMotionWithTitle(motionAcc, Id, figColor, 'Time-Acceleration');
     end
-    % 加加速度
+    % jerk
     if ~g_drawTimeJerk
         return;
     end
     motionJerk = GetAcc(motionAcc);
-    Id = DrawMotionWithTitle(motionJerk, Id, figColor, '时间-加加速度图');
+    Id = DrawMotionWithTitle(motionJerk, Id, figColor, 'Time-Jerk');
 end
 
-%% 轨迹画图
+%%% Draw track
 function Id = DrawTrack(motionTrack, figId, figColor)
     Id = figId;
     global g_SingleAxisMode;
     if g_SingleAxisMode
-        fprintf('单轴模式下不支持画轨迹图！\n');
+        fprintf('Track drawing is not supported in single axis mode!\n');
         return;
     end
     if size(motionTrack,2) < 1
-        fprintf('没有用于画轨迹图的数据！\n');
+        fprintf('No data for plotting!\n');
         return;
     end
     if size(motionTrack,2) > 3
-        fprintf('不支持超过3维的轨迹作图：实际维数为%d\n', size(motionTrack,2));
+        fprintf('Drawing of track exceeding 3 dimensions is not supported: the actual dimension is %d\n', size(motionTrack,2));
         return;
     end
-    % 画图
+    % Drawing
     Id = Id + 1;
     figure(Id);
     hold on;
@@ -88,12 +88,12 @@ function Id = DrawTrack(motionTrack, figId, figColor)
         plot3(motionTrack(:,1), motionTrack(:,2), motionTrack(:,3), figColor);
         view([1 1 1]);
     end
+    title('Track');
     axis equal;
-    title('轨迹图');
     grid on;
 end
 
-%% 获取速度
+%%% Get speed
 function motionSpeed = GetSpeed(motionTrack)
     global g_period;
     [row, column] = size(motionTrack);
@@ -107,7 +107,7 @@ function motionSpeed = GetSpeed(motionTrack)
     end
 end
 
-%% 获取加速度
+%%% Get acceleration
 function motionAcc = GetAcc(motionSpeed)
     global g_period;
     [row, column] = size(motionSpeed);
@@ -120,19 +120,19 @@ function motionAcc = GetAcc(motionSpeed)
     end
 end
 
-%% 根据标题画图（速度、加速度、加加速度）
+%%% Draw according to the title (speed, acceleration, jerk)
 function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
     Id = figId;
     global g_SingleAxisMode;
-    % 根据维数决定图像布局：第一列为时间，最后一列为所有维数的合
+    % Determine figure layout based on dimensions: the first column is time, and the last column is the sum of all dimensions
     column = size(motionParam,2);
     if column < 3
-        fprintf('错误的参数：数据维数不足！\n');
+        fprintf('Wrong parameter: insufficient data dimensions!\n');
         return;
     end
-    preTitle = {'X轴', 'Y轴', 'Z轴', '合'};
+    preTitle = {'X axis ', 'Y axis ', 'Z axis ', 'Combined '};
     if column == 3
-        % 一维数据：只画单轴数据
+        % One dimensional data: only draw single axis data
         Id = Id + 1;
         figure(Id);
         hold on;
@@ -140,7 +140,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
         title([preTitle{1}, figTitle]);
         axis auto; grid on;
     elseif column == 4 && ~g_SingleAxisMode
-        % 二维数据：画单轴数据和合数据
+        % Two dimensional data: draw single axis data and combined data
         Id = Id + 1;
         figure(Id);
         handleSub = cell(3,1);
@@ -158,7 +158,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
         end
         linkaxes([handleSub{1}, handleSub{2}, handleSub{3}], 'x');
     elseif column == 5 && ~g_SingleAxisMode
-        % 三维数据：画单轴数据和合数据
+        % Three dimensional data: draw single axis data and combined data
         for i = 1:2:3
             Id = Id + 1;
             figure(Id);
@@ -173,7 +173,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
             linkaxes([handleSub{1}, handleSub{2}], 'x');
         end
     else
-        % 只画单轴数据：超过三维的数据默认不画合数据
+        % Draw only single axis data: data exceeding three dimensions does not draw data by default
         for i = 1:2:column-3
             Id = Id + 1;
             figure(Id);
@@ -182,7 +182,7 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
                 handleSub{j} = subplot(2,1,j);
                 hold on;
                 plot(motionParam(:,1), motionParam(:,i+j), figColor);
-                title(['第', num2str(i+j-1), '维', figTitle]);
+                title(['No. ', num2str(i+j-1), ' ', figTitle]);
                 axis auto; grid on;
             end
             linkaxes([handleSub{1}, handleSub{2}], 'x');
@@ -192,23 +192,23 @@ function Id = DrawMotionWithTitle(motionParam, figId, figColor, figTitle)
             figure(Id);
             hold on;
             plot(motionParam(:,1), motionParam(:,column-1), figColor);
-            title(['第', num2str(column-1), '维', figTitle]);
+            title(['No. ', num2str(column-1), ' ', figTitle]);
             axis auto; grid on;
         end
     end
 end
 
-%% 画距离-速度图
+%%% Draw distance-speed
 function Id = DrawDistSpeed(motionSpeed, figId, figColor)
     Id = figId;
     global g_SingleAxisMode;
     if g_SingleAxisMode
-        fprintf('单轴模式下不支持画距离-轨迹图！\n');
+        fprintf('Distance-speed drawing is not supported in single axis mode!\n');
         return;
     end
     [row, column] = size(motionSpeed);
     if column < 3 || column > 5
-        error('%d维数据不支持画距离-速度图！\n', column-2);
+        error('%d dimension data does not support drawing distance-speed!\n', column-2);
     end
     global g_period;
     distSpeed = zeros(row,2);
@@ -218,11 +218,11 @@ function Id = DrawDistSpeed(motionSpeed, figId, figColor)
         distSpeed(i,1) = distSpeed(i-1,1) + motionSpeed(i,column) * g_period;
         distSpeed(i,2) = motionSpeed(i,column);
     end
-    % 画图
+    % Drawing
     Id = figId + 1;
     figure(Id);
     hold on;
     plot(distSpeed(:,1), distSpeed(:,2), figColor);
-    title('距离-速度图');
+    title('Distance-Speed');
     grid on;
 end
