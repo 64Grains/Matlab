@@ -52,7 +52,6 @@ function [nxDeriv0, nxDeriv1, nxDeriv2] = GetBSplineDeriv(nurbs, vecWeightedPole
             / (nurbs.vecKnots(nKnotIndex+1) - nurbs.vecKnots(nKnotIndex-1)));
     else
         nxDeriv2 = zeros(size(vecPoles(1,:)));
-        deBoorInfo.nEndIndex = 0;
     end
     
     deBoorInfo.nStartIndex = deBoorInfo.nEndIndex + 1;
@@ -82,7 +81,7 @@ function [vecPolesNew, vecTempPolesNew] = GetIteratePole(nurbs, deBoorInfo, vecP
     vecPolesNew = vecPoles;
     vecTempPolesNew = vecTempPoles;
     % De-Boor recursive algorithm calculates iterative poles
-    for i = deBoorInfo.nStartIndex:deBoorInfo.nEndIndex
+    for i = max(deBoorInfo.nStartIndex,1):deBoorInfo.nEndIndex
         for j = i:nurbs.nDegree
             nTempIndex = deBoorInfo.nKnotIndex - nurbs.nDegree + j;
             nAlpha = (deBoorInfo.nKnot - nurbs.vecKnots(nTempIndex)) / (nurbs.vecKnots(nurbs.nDegree+1+nTempIndex-i)...
