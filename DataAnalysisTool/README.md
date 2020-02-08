@@ -1,63 +1,63 @@
-# 数据分析工具简介
+# Data Analysis Tool Introduction
 
-## 工具目的及生成
+## Tool purpose and generation
 
-该工具用于分析采集的轨迹数据。
+This tool is used to analyze the collected track data.
 
-使用命令`guide`打开`DataAnalysisTool.fig`，可以查看并修改该工具的界面布局及功能按钮。
+Use the command `guide` to open `DataAnalysisTool.fig`, you can view and modify the interface layout and function buttons of the tool.
 
-使用命令`mcc -m DataAnalysisTool.m `，可以编译生成可执行文件`DataAnalysisTool.exe`。
+Use the command `mcc -m DataAnalysisTool.m` to compile and generate the executable file `DataAnalysisTool.exe`.
 
-## 参数介绍
+## Parameters
 
-### 控制周期
+### Sampling period
 
-采集轨迹数据的时间间隔。
+The time interval at which the track data was collected.
 
-### 数据格式
+### Data format
 
-采集数据在文件中每行的存储格式，其中`%f`代表一个数值。如果数据中包含有特定字符，比如`x`、`y`等，可在数据格式中添加`%c`；如果数据中包含标点符号，比如`,`、`;`等，可直接在数据格式中添加相应的标点符号，这样才能保证正确读取文件中存储的数据点。
+The storage format of the collected data in each line of the file, where `%f` represents a numerical value. If the data contains specific characters, such as `x`, `y`, etc., you can add `%c` to the data format. If the data contains punctuation marks, such as `,`, `;`, etc., you can directly add the corresponding punctuation marks to the data format. Then you can guarantee that the data points stored in the file are read correctly.
 
-### 有效数据列
+### Valid data columns
 
-数据格式中的`%f`代表数值，可以指定某个`%f`对应的列是否有效，如果无效，则筛选数据时会放弃该列数值。
+The `%f` in the data format represents a numerical value. You can specify whether a column corresponding to a certain `%f` is valid. If it is invalid, the column value will be discarded when filtering the data.
 
-### 删除首尾冗余数据
+### Delete redundant data at the beginning and end
 
-如果采集的数据中，首尾包含有相同的行数据，则该选项可以去除冗余数据。
+This option can remove redundant data if the collected data contains the same row data at the beginning and end.
 
-## 画图选项
+## Drawing options
 
-### 单轴模式
+### Single axis mode
 
-在该模式下，只能画单轴的时间-速度图、时间-加速度图、时间-加加速度图，不能画轨迹和距离-速度图。
+In this mode, you can only draw the time-speed, time-acceleration, and time-jerk of a single axis. You cannot draw the track and distance-speed.
 
-### 画轨迹图
+### Draw track
 
-对于三维及以下的轨迹，可以画出轨迹图；超过三维的轨迹，不能画轨迹图。
+For three dimensional or less track data, you can draw track. Track data exceeding three dimensions does not support drawing track.
 
-其余画图可依据参数名称辨别，这里不再赘述。
+The rest of the drawing options can be identified based on the parameter names, so I won't repeat them here.
 
-## 剪切选项
+## Cut options
 
-一份采集的数据可能会很大，有时需要截取数据中的某一部分进行分析，这时可借助剪切选项达到目的。根据时间-速度图，确定要剪切的起始时间和终止时间，一次最多只能剪切三组数据。
+A piece of collected data may be very large, and sometimes it is necessary to intercept a part of the data for analysis. In this case, you can use the cut option to achieve the purpose. According to the time-speed figure, determine the start time and end time to be cut. Only three sets of data can be cut at the same time.
 
-## 导入文件
+## Importing Files
 
-选择欲分析的文件，导入后，可以左下角的数据文件列表中查看导入的文件。
+Select the files to be analyzed. After importing, you can view the imported files in the data files list in the lower left corner.
 
-## 画图比较
+## Drawing Comparison
 
-导入欲分析的文件，设置相应的参数，然后点击该按钮，可以画出相应的图形。
+Import the files to be analyzed, set the corresponding parameters, and click this button to draw the corresponding figures.
 
-## 执行剪切
+## Perform Cut
 
-确定剪切的范围，输入到剪切选项中，然后点击该按钮，即可画出剪切部分的相应图形。
+Determine the cut ranges, enter them into the cut options, and click this button to draw the corresponding figures of the cut parts.
 
-## 清空图像
+## Clear Figure
 
-关闭前面执行`画图比较`和`执行剪切`画的所有图像。
+Close all figures previously drawn by `Drawing Comparison` and `Perform Cut`.
 
-## 关闭工具
+## Close Tool
 
-先`清空图像`，然后关闭该工具。
+`Clear Figure`, and then close the tool.
